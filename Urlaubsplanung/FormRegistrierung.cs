@@ -62,15 +62,18 @@ namespace Urlaubsplanung
                     else
                     {
                         dr.Close();
+                        int Anspruch = 200;
+                        int Fehlstunden = 0;
+                        
                         cmd = new SqlCommand("INSERT INTO Mitarbeiter (Name, Urlaubsanspruch, Fehlstunden, Benutzername, Passwort, Rolle) VALUES (@Name, @Urlaubsanspruch, @Fehlstunden, @Benutzername, @Passwort, @Rolle)", cn);
                         cmd.Parameters.AddWithValue("Name", textBox4.Text);
-                        cmd.Parameters.AddWithValue("Urlaubsanspruch", 200);
-                        cmd.Parameters.AddWithValue("Fehlstunden", 0);
+                        cmd.Parameters.AddWithValue("Urlaubsanspruch", Anspruch);
+                        cmd.Parameters.AddWithValue("Fehlstunden", Fehlstunden);
                         cmd.Parameters.AddWithValue("Benutzername", textBox1.Text);
                         cmd.Parameters.AddWithValue("Passwort", textBox2.Text);
-                        cmd.Parameters.AddWithValue("Rolle", comboBox1.Text);
+                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue);
                         cmd.ExecuteNonQuery();
-                        MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen. ", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
@@ -90,6 +93,11 @@ namespace Urlaubsplanung
         }
 
         private void textBox4_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
