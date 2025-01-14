@@ -71,7 +71,7 @@ namespace Urlaubsplanung
                         cmd.Parameters.AddWithValue("Fehlstunden", Fehlstunden);
                         cmd.Parameters.AddWithValue("Benutzername", textBox1.Text);
                         cmd.Parameters.AddWithValue("Passwort", textBox2.Text);
-                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue);
+                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue.ToString());
                         cmd.ExecuteNonQuery();
                         MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -100,6 +100,13 @@ namespace Urlaubsplanung
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            FormLogin login = new FormLogin();
+            login.ShowDialog();
         }
     }
 }
