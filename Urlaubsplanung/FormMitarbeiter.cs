@@ -19,6 +19,9 @@ namespace Urlaubsplanung
         public FormMitarbeiter()
         {
             InitializeComponent();
+
+            DateTime urlaub = new DateTime(2025,1,16);
+            monthCalendar1.AddBoldedDate(urlaub);          
         }
 
         private void FormMitarbeiter_Load(object sender, EventArgs e)
@@ -52,7 +55,12 @@ namespace Urlaubsplanung
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
+            
+        }
 
+        private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
+        {
+            
         }
     }
 }
