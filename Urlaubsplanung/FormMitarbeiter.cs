@@ -23,21 +23,24 @@ namespace Urlaubsplanung
 
         private void FormMitarbeiter_Load(object sender, EventArgs e)
         {
-            string pw = "test";
-
-            System.Security.SecureString strsec = new System.Security.SecureString();
-            foreach (char c in pw.ToCharArray())
+            using (cn)
             {
-                strsec.AppendChar(c);
+                string pw = "test";
+
+                System.Security.SecureString strsec = new System.Security.SecureString();
+                foreach (char c in pw.ToCharArray())
+                {
+                    strsec.AppendChar(c);
+                }
+                strsec.MakeReadOnly();
+
+                System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
+
+                System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
+                sqlCon.Open();
+
+                cn = sqlCon;
             }
-            strsec.MakeReadOnly();
-
-            System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
-
-            System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
-            sqlCon.Open();
-
-            cn = sqlCon;
         }
 
         private void button1_Click(object sender, EventArgs e)

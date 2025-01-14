@@ -49,7 +49,7 @@
             this.comboBox1.Location = new System.Drawing.Point(434, 309);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(146, 21);
-            this.comboBox1.TabIndex = 14;
+            this.comboBox1.TabIndex = 5;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // textBox2
@@ -57,14 +57,14 @@
             this.textBox2.Location = new System.Drawing.Point(434, 236);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(146, 20);
-            this.textBox2.TabIndex = 13;
+            this.textBox2.TabIndex = 3;
             // 
             // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(434, 192);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(146, 20);
-            this.textBox1.TabIndex = 12;
+            this.textBox1.TabIndex = 2;
             // 
             // label3
             // 
@@ -98,7 +98,7 @@
             this.button1.Location = new System.Drawing.Point(467, 365);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(100, 23);
-            this.button1.TabIndex = 8;
+            this.button1.TabIndex = 6;
             this.button1.Text = "Registrieren";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -118,7 +118,7 @@
             this.textBox3.Location = new System.Drawing.Point(434, 264);
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(146, 20);
-            this.textBox3.TabIndex = 17;
+            this.textBox3.TabIndex = 4;
             // 
             // label5
             // 
@@ -134,7 +134,7 @@
             this.textBox4.Location = new System.Drawing.Point(434, 151);
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(146, 20);
-            this.textBox4.TabIndex = 19;
+            this.textBox4.TabIndex = 1;
             this.textBox4.TextChanged += new System.EventHandler(this.textBox4_TextChanged);
             // 
             // label6
@@ -152,7 +152,7 @@
             this.button2.Location = new System.Drawing.Point(302, 365);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(100, 23);
-            this.button2.TabIndex = 20;
+            this.button2.TabIndex = 7;
             this.button2.Text = "Bereits registriert?";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);

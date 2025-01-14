@@ -46,7 +46,7 @@
             this.button1.Location = new System.Drawing.Point(305, 369);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 0;
+            this.button1.TabIndex = 5;
             this.button1.Text = "Speichern";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -56,7 +56,7 @@
             this.button2.Location = new System.Drawing.Point(496, 369);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 1;
+            this.button2.TabIndex = 6;
             this.button2.Text = "Abbrechen";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
@@ -120,7 +120,7 @@
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(413, 63);
-            this.textBox1.TabIndex = 8;
+            this.textBox1.TabIndex = 4;
             // 
             // label5
             // 
@@ -137,7 +137,7 @@
             this.comboBox1.Location = new System.Drawing.Point(230, 145);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(412, 21);
-            this.comboBox1.TabIndex = 11;
+            this.comboBox1.TabIndex = 1;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // FormAntrag

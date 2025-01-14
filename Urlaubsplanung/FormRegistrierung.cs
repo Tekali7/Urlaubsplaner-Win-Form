@@ -27,23 +27,26 @@ namespace Urlaubsplanung
 
         private void FormRegistrierung_Load(object sender, EventArgs e)
         {
-            string pw = "test";
-
-            System.Security.SecureString strsec = new System.Security.SecureString();
-            foreach (char c in pw.ToCharArray())
+            using (cn)
             {
-                strsec.AppendChar(c);
+                string pw = "test";
+
+                System.Security.SecureString strsec = new System.Security.SecureString();
+                foreach (char c in pw.ToCharArray())
+                {
+                    strsec.AppendChar(c);
+                }
+                strsec.MakeReadOnly();
+
+                System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
+
+                System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
+                sqlCon.Open();
+
+                cn = sqlCon;
+
+                comboBox1.DataSource = Enum.GetValues(typeof(EnumRolle.Rolle));
             }
-            strsec.MakeReadOnly();
-
-            System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
-
-            System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
-            sqlCon.Open();
-
-            cn = sqlCon;
-
-            comboBox1.DataSource = Enum.GetValues(typeof(EnumRolle.Rolle));
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -71,7 +74,7 @@ namespace Urlaubsplanung
                         cmd.Parameters.AddWithValue("Fehlstunden", Fehlstunden);
                         cmd.Parameters.AddWithValue("Benutzername", textBox1.Text);
                         cmd.Parameters.AddWithValue("Passwort", textBox2.Text);
-                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue.ToString());
+                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue);
                         cmd.ExecuteNonQuery();
                         MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
