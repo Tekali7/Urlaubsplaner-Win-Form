@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Urlaubsplanung.Enums;
 
 namespace Urlaubsplanung
 {
@@ -42,6 +43,9 @@ namespace Urlaubsplanung
 
                 cn = sqlCon;
             }
+
+
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -49,13 +53,14 @@ namespace Urlaubsplanung
             if (textBox1.Text != string.Empty || textBox2.Text != string.Empty)
             {
 
-                cmd = new SqlCommand("SELECT * FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "' AND Passwort='" + textBox2.Text + "'", cn);
+                cmd = new SqlCommand("SELECT MitarbeiterID FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "' AND Passwort='" + textBox2.Text + "'", cn);
                 dr = cmd.ExecuteReader();
                 if (dr.Read())
                 {
+                    int mitarbeiterID = dr.GetInt32 (0);
                     dr.Close();
                     this.Hide();
-                    FormMitarbeiter formMitarbeiter = new FormMitarbeiter();
+                    FormMitarbeiter formMitarbeiter = new FormMitarbeiter(mitarbeiterID);
                     formMitarbeiter.ShowDialog();
                 }
                 else

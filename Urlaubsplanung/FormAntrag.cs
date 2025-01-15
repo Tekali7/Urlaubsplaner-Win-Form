@@ -18,6 +18,8 @@ namespace Urlaubsplanung
         SqlCommand cmd;
         SqlConnection cn;
         SqlDataReader dr;
+
+        int MitarbeiterID;
         public FormAntrag()
         {
             InitializeComponent();
@@ -68,7 +70,7 @@ namespace Urlaubsplanung
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {   using (cn)
             {
                 cmd = new SqlCommand(
@@ -91,7 +93,7 @@ namespace Urlaubsplanung
                     cmd.Parameters.AddWithValue("@Grund", textBox1.Text);
                     cmd.Parameters.AddWithValue("@Status", 0);
                     cmd.ExecuteNonQuery();
-
+                    
                     MessageBox.Show("Ihr Antrag wurde eingereicht.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -117,7 +119,7 @@ namespace Urlaubsplanung
         private void button2_Click(object sender, EventArgs e)
         {
             this.Hide();
-            FormMitarbeiter formMitarbeiter = new FormMitarbeiter();
+            FormMitarbeiter formMitarbeiter = new FormMitarbeiter(MitarbeiterID);
             formMitarbeiter.ShowDialog();
         }
 

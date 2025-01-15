@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,21 +14,23 @@ namespace Urlaubsplanung
 {
     public partial class FormMitarbeiter : Form
     {
+
         SqlCommand cmd;
         SqlConnection cn;
         SqlDataReader dr;
-        public FormMitarbeiter()
+
+        int MitarbeiterID;
+
+        public FormMitarbeiter(int mitarbeiterID)
         {
             InitializeComponent();
-
-            DateTime urlaub = new DateTime(2025,1,16);
-            monthCalendar1.AddBoldedDate(urlaub);          
+            MitarbeiterID = mitarbeiterID;
         }
 
         private void FormMitarbeiter_Load(object sender, EventArgs e)
         {
-            using (cn)
-            {
+
+            
                 string pw = "test";
 
                 System.Security.SecureString strsec = new System.Security.SecureString();
@@ -43,7 +46,49 @@ namespace Urlaubsplanung
                 sqlCon.Open();
 
                 cn = sqlCon;
+                   
+           
+            LoadBoldedDates();
+            LoadUserLabel();
+        }
+
+        private void LoadBoldedDates()
+        {
+            string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID";
+
+            
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                while (dr.Read())
+                {
+                    DateTime DatumBeginn = dr.GetDateTime(0);
+                    DateTime DatumEnde = dr.GetDateTime(1);
+
+                    for (DateTime date = DatumBeginn; date <= DatumEnde; date = date.AddDays(1))
+                    {
+                        monthCalendar1.AddBoldedDate(date);
+                    }
+                }
+
+            dr.Close();
+            monthCalendar1.UpdateBoldedDates();
+        }
+
+        private void LoadUserLabel()
+        { 
+            string query = "SELECT Name FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
+
+            SqlCommand cmd = new SqlCommand(query, cn);
+            cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                label5.Text = dr.GetString(0);
             }
+            dr.Close();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -51,11 +96,6 @@ namespace Urlaubsplanung
             this.Hide();
             FormAntrag login = new FormAntrag();
             login.ShowDialog();
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-            
         }
 
         private void monthCalendar1_DateChanged(object sender, DateRangeEventArgs e)
