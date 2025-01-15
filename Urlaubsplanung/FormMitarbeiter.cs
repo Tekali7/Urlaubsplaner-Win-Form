@@ -50,6 +50,7 @@ namespace Urlaubsplanung
            
             LoadBoldedDates();
             LoadUserLabel();
+            LoadUrlaubsanspruchLabel();
         }
 
         private void LoadBoldedDates()
@@ -87,6 +88,20 @@ namespace Urlaubsplanung
             while (dr.Read())
             {
                 label5.Text = dr.GetString(0);
+            }
+            dr.Close();
+        }
+
+        private void LoadUrlaubsanspruchLabel()
+        {
+            string query = "SELECT Urlaubsanspruch FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
+            SqlCommand cmd = new SqlCommand(query, cn);
+            cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                label6.Text = dr.GetDouble(0).ToString() + " h";
             }
             dr.Close();
         }
