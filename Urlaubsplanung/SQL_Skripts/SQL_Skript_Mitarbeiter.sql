@@ -1,7 +1,7 @@
 USE [urlaubdb]
 GO
 
-/****** Object:  Table [dbo].[Mitarbeiter]    Script Date: 16.01.2025 14:11:02 ******/
+/****** Object:  Table [dbo].[Mitarbeiter]    Script Date: 16.01.2025 14:19:24 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -15,7 +15,7 @@ CREATE TABLE [dbo].[Mitarbeiter](
 	[Fehlstunden] [float] NULL,
 	[Benutzername] [varchar](30) NOT NULL,
 	[Passwort] [varchar](30) NOT NULL,
-	[Rolle] [int] NULL,
+	[Rolle] [int] NOT NULL,
 PRIMARY KEY CLUSTERED 
 (
 	[MitarbeiterID] ASC

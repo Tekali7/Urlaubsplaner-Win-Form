@@ -1,7 +1,7 @@
 USE [urlaubdb]
 GO
 
-/****** Object:  Table [dbo].[Urlaubsantrag]    Script Date: 16.01.2025 14:07:41 ******/
+/****** Object:  Table [dbo].[Urlaubsantrag]    Script Date: 16.01.2025 14:19:40 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -10,7 +10,7 @@ GO
 
 CREATE TABLE [dbo].[Urlaubsantrag](
 	[UrlaubsantragID] [int] IDENTITY(1,1) NOT NULL,
-	[MitarbeiterID] [int] NULL,
+	[MitarbeiterID] [int] NOT NULL,
 	[DatumBeginn] [date] NOT NULL,
 	[DatumEnde] [date] NOT NULL,
 	[Grund] [varchar](100) NOT NULL,
