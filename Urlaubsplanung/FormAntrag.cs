@@ -18,16 +18,16 @@ namespace Urlaubsplanung
         SqlCommand cmd;
         SqlConnection cn;
         SqlDataReader dr;
-
         int MitarbeiterID;
-        public FormAntrag()
+
+        public FormAntrag(int mitarbeiterID)
         {
             InitializeComponent();
+            MitarbeiterID = mitarbeiterID;
         }
         private void FormAntrag_Load(object sender, EventArgs e)
         {
-            using (cn)
-            {
+            
                 string pw = "test";
 
                 System.Security.SecureString strsec = new System.Security.SecureString();
@@ -44,15 +44,7 @@ namespace Urlaubsplanung
 
                 cn = sqlCon;
 
-                SqlCommand cmd = new SqlCommand("SELECT Name FROM Mitarbeiter", cn);
-                SqlDataReader dr = cmd.ExecuteReader();
-
-                while (dr.Read())
-                {
-                    comboBox1.Items.Add(dr["Name"].ToString());
-                }
-            dr.Close();
-            }
+                LoadUserLabel();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -70,12 +62,30 @@ namespace Urlaubsplanung
 
         }
 
+        // Angemeldeten Mitarbeiter anzeigen
+        private void LoadUserLabel()
+        {
+            string query = "SELECT Name FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
+
+            SqlCommand cmd = new SqlCommand(query, cn);
+            cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                label6.Text = dr.GetString(0);
+            }
+            dr.Close();
+        }
+
+
+        // Urlaubsantrag erstellen, Status bei Erstellung 0 = Ausstehend
         private async void button1_Click(object sender, EventArgs e)
         {   using (cn)
             {
                 cmd = new SqlCommand(
                 "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name", cn);
-                cmd.Parameters.AddWithValue("@Name", comboBox1.Text);
+                cmd.Parameters.AddWithValue("@Name", label6.Text);
 
                 dr = cmd.ExecuteReader();
                 if (dr.Read())

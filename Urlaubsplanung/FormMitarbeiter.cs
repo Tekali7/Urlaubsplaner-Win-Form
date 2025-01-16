@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Urlaubsplanung.Enums;
 
 namespace Urlaubsplanung
 {
@@ -58,7 +59,7 @@ namespace Urlaubsplanung
         // Beantragten Urlaub im Kalender fett formatieren
         private void LoadBoldedDates()
         {
-            string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID";
+            string query = "SELECT DatumBeginn, DatumEnde, Status FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID";
 
             
                 SqlCommand cmd = new SqlCommand(query, cn);
@@ -66,13 +67,17 @@ namespace Urlaubsplanung
                 SqlDataReader dr = cmd.ExecuteReader();
 
                 while (dr.Read())
-                {
+                {                    
                     DateTime DatumBeginn = dr.GetDateTime(0);
                     DateTime DatumEnde = dr.GetDateTime(1);
+                    EnumStatus.Status status = (EnumStatus.Status)dr.GetInt32(2);
 
-                    for (DateTime date = DatumBeginn; date <= DatumEnde; date = date.AddDays(1))
+                    if (status == EnumStatus.Status.Ausstehend || status == EnumStatus.Status.Genehmigt)
                     {
-                        monthCalendar1.AddBoldedDate(date);
+                        for (DateTime date = DatumBeginn; date <= DatumEnde; date = date.AddDays(1))
+                        {
+                            monthCalendar1.AddBoldedDate(date);
+                        }
                     }
                 }
 
@@ -138,7 +143,7 @@ namespace Urlaubsplanung
         private void button1_Click(object sender, EventArgs e)
         {
             this.Hide();
-            FormAntrag login = new FormAntrag();
+            FormAntrag login = new FormAntrag(MitarbeiterID);
             login.ShowDialog();
         }
 
