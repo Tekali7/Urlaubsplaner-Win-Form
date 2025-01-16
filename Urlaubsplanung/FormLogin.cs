@@ -66,7 +66,7 @@ namespace Urlaubsplanung
                 else
                 {
                     dr.Close();
-                    MessageBox.Show("Kein Konto mit diesem Benutzernamen verfügbar. ", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Kein Konto mit diesem Benutzernamen/Passwort verfügbar. ", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
             }

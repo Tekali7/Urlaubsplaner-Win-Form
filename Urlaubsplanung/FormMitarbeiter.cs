@@ -20,6 +20,8 @@ namespace Urlaubsplanung
         SqlDataReader dr;
 
         int MitarbeiterID;
+        int Urlaubsanspruch;
+        int Fehlstunden;
 
         public FormMitarbeiter(int mitarbeiterID)
         {
@@ -28,9 +30,7 @@ namespace Urlaubsplanung
         }
 
         private void FormMitarbeiter_Load(object sender, EventArgs e)
-        {
-
-            
+        {          
                 string pw = "test";
 
                 System.Security.SecureString strsec = new System.Security.SecureString();
@@ -51,8 +51,11 @@ namespace Urlaubsplanung
             LoadBoldedDates();
             LoadUserLabel();
             LoadUrlaubsanspruchLabel();
+            LoadFehlstundenLabel();
+            LoadResturlaubLabel();
         }
 
+        // Beantragten Urlaub im Kalender fett formatieren
         private void LoadBoldedDates()
         {
             string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID";
@@ -77,6 +80,7 @@ namespace Urlaubsplanung
             monthCalendar1.UpdateBoldedDates();
         }
 
+        // Angemeldeten Mitarbeiter anzeigen
         private void LoadUserLabel()
         { 
             string query = "SELECT Name FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
@@ -92,6 +96,7 @@ namespace Urlaubsplanung
             dr.Close();
         }
 
+        // Urlaubsanspruch anzeigen
         private void LoadUrlaubsanspruchLabel()
         {
             string query = "SELECT Urlaubsanspruch FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
@@ -101,9 +106,33 @@ namespace Urlaubsplanung
 
             while (dr.Read())
             {
+                Urlaubsanspruch = Convert.ToInt32(dr.GetDouble(0));
                 label6.Text = dr.GetDouble(0).ToString() + " h";
             }
             dr.Close();
+        }
+
+        // Fehlstunden anzeigen
+        private void LoadFehlstundenLabel()
+        {
+            string query = "SELECT Fehlstunden FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
+            SqlCommand cmd = new SqlCommand(query, cn);
+            cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                Fehlstunden = Convert.ToInt32(dr.GetDouble(0));
+                label7.Text = dr.GetDouble(0).ToString() + " h";
+            }
+            dr.Close();
+        }
+
+        // Resturlaub berechnen/anzeigen
+        private void LoadResturlaubLabel()
+        {
+            int Resturlaub = Urlaubsanspruch - Fehlstunden;
+            label8.Text = Resturlaub.ToString() + " h";
         }
 
         private void button1_Click(object sender, EventArgs e)
