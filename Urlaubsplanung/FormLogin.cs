@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Urlaubsplanung.Enums;
+using static Urlaubsplanung.Enums.EnumRolle;
 
 namespace Urlaubsplanung
 {
@@ -52,23 +53,35 @@ namespace Urlaubsplanung
         {
             if (textBox1.Text != string.Empty || textBox2.Text != string.Empty)
             {
+                cmd = new SqlCommand("SELECT MitarbeiterID, Rolle FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "' AND Passwort='" + textBox2.Text + "'", cn);
+                cmd.Parameters.AddWithValue("@Benutzername", textBox1.Text);
+                cmd.Parameters.AddWithValue("@Passwort", textBox2.Text);
+                dr = cmd.ExecuteReader(); 
 
-                cmd = new SqlCommand("SELECT MitarbeiterID FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "' AND Passwort='" + textBox2.Text + "'", cn);
-                dr = cmd.ExecuteReader();
                 if (dr.Read())
                 {
                     int mitarbeiterID = dr.GetInt32 (0);
+                    int rolle = dr.GetInt32(1);
+
                     dr.Close();
-                    this.Hide();
-                    FormMitarbeiter formMitarbeiter = new FormMitarbeiter(mitarbeiterID);
-                    formMitarbeiter.ShowDialog();
+                
+                    if (rolle == (int)EnumRolle.Rolle.Verwaltung)
+                    {
+                       
+                        FormVerwaltung formVerwaltung = new FormVerwaltung(mitarbeiterID);
+                        formVerwaltung.ShowDialog();
+                    }
+                    else
+                    {
+                        FormMitarbeiter formMitarbeiter = new FormMitarbeiter(mitarbeiterID);
+                        formMitarbeiter.ShowDialog();
+                    }                   
                 }
                 else
                 {
                     dr.Close();
                     MessageBox.Show("Kein Konto mit diesem Benutzernamen/Passwort verfügbar. ", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
             }
             else
             {
