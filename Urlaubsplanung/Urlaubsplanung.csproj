@@ -126,5 +126,10 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="SQL_Skripts\SQL_Skript_Mitarbeiter.sql" />
+    <Content Include="SQL_Skripts\SQL_Skript_Urlaubsantrag.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
