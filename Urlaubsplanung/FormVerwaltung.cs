@@ -44,6 +44,11 @@ namespace Urlaubsplanung
             sqlCon.Open();
 
             cn = sqlCon;
+
+            // Und hier wie das DataGridView befüllt wird:
+            DataSet myData = this.HoleDatenVariante1("Mitarbeiter");
+            this.dataGridView1.DataSource = myData;
+            this.dataGridView1.DataMember = "Mitarbeiter";
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -65,23 +70,22 @@ namespace Urlaubsplanung
             string sqlCommand = String.Concat("SELECT * FROM ", tableName);
 
             // Erstelle mir einen SQL-Befehl für meine DB Verbindung
-            SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, myConnection);
+            SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, cn);
 
             // Führe den SQL-Befehl aus, und hole die Daten aus der DB, speichere die Daten in dem DataSet
             cmd.Fill(retValue, tableName);
 
             // Schließe die DB Verbindung nun wieder
-            myConnection.Close();
+            // cn.Close();
 
             // gib die Daten zurück
             return retValue;
         }
 
-        // Und hier wie das DataGridView befüllt wird:
+            
 
-        DataSet myData = this.myCon.HoleDatenVariante1("Telefonbuch");
-        this.dataGridView1.DataSource = myData;
-        this.dataGridView1.DataMember = "Telefonbuch";
+
+
 
 
 
