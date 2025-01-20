@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,6 +50,8 @@ namespace Urlaubsplanung
             DataSet myData = this.HoleDatenVariante1("Mitarbeiter");
             this.dataGridView1.DataSource = myData;
             this.dataGridView1.DataMember = "Mitarbeiter";
+
+            HinzufügenKalenderwochen();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -82,7 +85,44 @@ namespace Urlaubsplanung
             return retValue;
         }
 
-            
+        private void HinzufügenKalenderwochen()
+        {
+            for (int i = 1; i <= 52; i++)
+            {
+                this.dataGridView1.Columns.Add("KW" + i, "KW" + i);
+            }
+
+            // Durch jede Zeile im DataGridView iterieren
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                // Stelle sicher, dass die Zeile gültige Daten hat
+                if (row.Cells["DatumBeginn"].Value != DBNull.Value && row.Cells["DatumEnde"].Value != DBNull.Value)
+                {
+                    DateTime datumBeginn = Convert.ToDateTime(row.Cells["DatumBeginn"].Value);
+                    DateTime datumEnde = Convert.ToDateTime(row.Cells["DatumEnde"].Value);
+
+                    // Berechne die Kalenderwochen für DatumBeginn und DatumEnde
+                    Calendar cal = CultureInfo.InvariantCulture.Calendar;
+
+                    // Berechne die Kalenderwochen für den Beginn und das Ende
+                    int startKW = cal.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    int endKW = cal.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+
+                    // Setze die entsprechenden Kalenderwochen im DataGridView
+                    for (int i = startKW; i <= endKW; i++)
+                    {
+                        // Finde die Spalte für die aktuelle Kalenderwoche
+                        DataGridViewColumn kwColumn = dataGridView1.Columns["KW" + i];
+                        if (kwColumn != null)
+                        {
+                            row.Cells[kwColumn.Index].Value = datumBeginn.ToShortDateString() + "-" + datumEnde.ToShortDateString();
+                        }
+                    }
+                }
+            }
+        }
+
+
 
     }
 }
