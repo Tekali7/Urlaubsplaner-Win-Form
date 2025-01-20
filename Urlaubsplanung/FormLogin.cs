@@ -67,12 +67,13 @@ namespace Urlaubsplanung
                 
                     if (rolle == (int)EnumRolle.Rolle.Verwaltung)
                     {
-                       
+                        this.Hide();
                         FormVerwaltung formVerwaltung = new FormVerwaltung(mitarbeiterID);
                         formVerwaltung.ShowDialog();
                     }
                     else
                     {
+                        this.Hide();
                         FormMitarbeiter formMitarbeiter = new FormMitarbeiter(mitarbeiterID);
                         formMitarbeiter.ShowDialog();
                     }                   

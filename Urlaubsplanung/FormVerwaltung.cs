@@ -67,7 +67,7 @@ namespace Urlaubsplanung
             DataSet retValue = new DataSet();
 
             // Bastle einen SQL-Befehl in Form eines Strings, der mir die Daten aus der DB holen soll
-            string sqlCommand = String.Concat("SELECT * FROM ", tableName);
+            string sqlCommand = String.Concat("SELECT Name, Urlaubsanspruch, Fehlstunden, DatumBeginn, DatumEnde FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID WHERE DatumBeginn IS NULL OR DatumBeginn IS NOT NULL");
 
             // Erstelle mir einen SQL-Befehl für meine DB Verbindung
             SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, cn);
@@ -83,11 +83,6 @@ namespace Urlaubsplanung
         }
 
             
-
-
-
-
-
 
     }
 }
