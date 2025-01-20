@@ -46,12 +46,70 @@ namespace Urlaubsplanung
 
             cn = sqlCon;
 
+            // DataSet erstellen
+            DataSet übersicht = new DataSet();
+
+            DataTable übersichtTable = übersicht.Tables.Add("Übersicht");
+
+            DataColumn columns =
+            übersichtTable.Columns.Add("Name");
+            übersichtTable.Columns.Add("Urlaubsanspruch");
+            übersichtTable.Columns.Add("Fehlstunden");
+            for (int i = 1; i <= 52; i++)
+            {
+                übersichtTable.Columns.Add("KW" + i);
+            }
+
             // Und hier wie das DataGridView befüllt wird:
             DataSet myData = this.HoleDatenVariante1("Mitarbeiter");
-            this.dataGridView1.DataSource = myData;
-            this.dataGridView1.DataMember = "Mitarbeiter";
 
-            HinzufügenKalenderwochen();
+            if (myData != null)
+            {
+                foreach (DataRow row in myData.Tables["Mitarbeiter"].Rows)
+                {
+                    DataRow[] existingRows = übersichtTable.Select("Name = '" + row["Name"].ToString() + "'");
+
+                    DataRow targetRow;
+
+                    if (existingRows.Length > 0)
+                    {
+                        targetRow = existingRows[0];
+                    }
+                    else
+                    {
+                        targetRow = übersichtTable.NewRow();
+                        targetRow["Name"] = row["Name"];
+                        targetRow["Urlaubsanspruch"] = row["Urlaubsanspruch"];
+                        targetRow["Fehlstunden"] = row["Fehlstunden"];
+                        übersichtTable.Rows.Add(targetRow);
+                    }
+
+                    var urlaubRows = myData.Tables["Mitarbeiter"].AsEnumerable()
+                        .Where(urlaubRow => urlaubRow["Name"].ToString() == row["Name"].ToString());
+
+                    foreach (var urlaubRow in urlaubRows)
+                    {
+                        if (!DateTime.TryParse(urlaubRow["DatumBeginn"].ToString(), out DateTime datumBeginn) ||
+                            !DateTime.TryParse(urlaubRow["DatumEnde"].ToString(), out DateTime datumEnde))
+                        {
+                            continue;
+                        }
+
+                        int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                        for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                        {
+                            targetRow["KW" + kw] = datumBeginn.ToShortDateString() + "-" + datumEnde.ToShortDateString();
+                        }
+                    }
+                }
+            }
+
+
+
+            this.dataGridView1.DataSource = übersicht;
+            this.dataGridView1.DataMember = "Übersicht";
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -70,7 +128,7 @@ namespace Urlaubsplanung
             DataSet retValue = new DataSet();
 
             // Bastle einen SQL-Befehl in Form eines Strings, der mir die Daten aus der DB holen soll
-            string sqlCommand = String.Concat("SELECT Name, Urlaubsanspruch, Fehlstunden, DatumBeginn, DatumEnde FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID WHERE DatumBeginn IS NULL OR DatumBeginn IS NOT NULL");
+            string sqlCommand = String.Concat("SELECT Name, Urlaubsanspruch, Fehlstunden, DatumBeginn, DatumEnde FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID");
 
             // Erstelle mir einen SQL-Befehl für meine DB Verbindung
             SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, cn);
@@ -84,45 +142,5 @@ namespace Urlaubsplanung
             // gib die Daten zurück
             return retValue;
         }
-
-        private void HinzufügenKalenderwochen()
-        {
-            for (int i = 1; i <= 52; i++)
-            {
-                this.dataGridView1.Columns.Add("KW" + i, "KW" + i);
-            }
-
-            // Durch jede Zeile im DataGridView iterieren
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                // Stelle sicher, dass die Zeile gültige Daten hat
-                if (row.Cells["DatumBeginn"].Value != DBNull.Value && row.Cells["DatumEnde"].Value != DBNull.Value)
-                {
-                    DateTime datumBeginn = Convert.ToDateTime(row.Cells["DatumBeginn"].Value);
-                    DateTime datumEnde = Convert.ToDateTime(row.Cells["DatumEnde"].Value);
-
-                    // Berechne die Kalenderwochen für DatumBeginn und DatumEnde
-                    Calendar cal = CultureInfo.InvariantCulture.Calendar;
-
-                    // Berechne die Kalenderwochen für den Beginn und das Ende
-                    int startKW = cal.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
-                    int endKW = cal.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
-
-                    // Setze die entsprechenden Kalenderwochen im DataGridView
-                    for (int i = startKW; i <= endKW; i++)
-                    {
-                        // Finde die Spalte für die aktuelle Kalenderwoche
-                        DataGridViewColumn kwColumn = dataGridView1.Columns["KW" + i];
-                        if (kwColumn != null)
-                        {
-                            row.Cells[kwColumn.Index].Value = datumBeginn.ToShortDateString() + "-" + datumEnde.ToShortDateString();
-                        }
-                    }
-                }
-            }
-        }
-
-
-
     }
 }
