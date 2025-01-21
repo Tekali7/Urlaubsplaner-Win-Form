@@ -4,18 +4,20 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Urlaubsplanung.Enums;
 
 namespace Urlaubsplanung
 {
     public partial class FormVerwaltung : Form
     {
-        
+
         SqlConnection cn;
         SqlDataReader dr;
 
@@ -105,9 +107,6 @@ namespace Urlaubsplanung
                     }
                 }
             }
-
-
-
             this.dataGridView1.DataSource = übersicht;
             this.dataGridView1.DataMember = "Übersicht";
         }
@@ -142,5 +141,39 @@ namespace Urlaubsplanung
             // gib die Daten zurück
             return retValue;
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.Green, "Der Antrag wurde genehmigt.");
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            UpdateSelectedCell(EnumStatus.Status.Abgelehnt, Color.Red, "Der Antrag wurde abgelehnt.");
+        }
+
+        private void UpdateSelectedCell(EnumStatus.Status status, Color color, string message)
+        {
+            if (dataGridView1.CurrentCell != null)
+            {
+                var cell = dataGridView1.CurrentCell;
+
+                if (cell.Value != null && !string.IsNullOrWhiteSpace(cell.Value.ToString()))
+                {
+                    cell.Tag = status;
+                    cell.Style.BackColor = color;
+                    MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Ungültige Auswahl. Wählen Sie eine gültige Zelle mit Daten aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Keine Zelle ausgewählt.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }

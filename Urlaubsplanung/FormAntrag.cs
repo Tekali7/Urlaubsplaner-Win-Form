@@ -45,6 +45,9 @@ namespace Urlaubsplanung
                 cn = sqlCon;
 
                 LoadUserLabel();
+
+                dateTimePicker1.MinDate = DateTime.Now;
+                dateTimePicker2.MinDate = DateTime.Now;
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -58,6 +61,11 @@ namespace Urlaubsplanung
         }
 
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void dateTimePicker2_ValueChanged(object sender, EventArgs e)
         {
 
         }
@@ -137,6 +145,7 @@ namespace Urlaubsplanung
         {
             
         }
+
     }
 }
 
