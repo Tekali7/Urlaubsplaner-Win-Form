@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -57,6 +58,7 @@ namespace Urlaubsplanung
             übersichtTable.Columns.Add("Name");
             übersichtTable.Columns.Add("Urlaubsanspruch");
             übersichtTable.Columns.Add("Fehlstunden");
+            übersichtTable.Columns.Add("UrlaubsantragID");
             for (int i = 1; i <= 52; i++)
             {
                 übersichtTable.Columns.Add("KW" + i);
@@ -83,9 +85,17 @@ namespace Urlaubsplanung
                         targetRow["Name"] = row["Name"];
                         targetRow["Urlaubsanspruch"] = row["Urlaubsanspruch"];
                         targetRow["Fehlstunden"] = row["Fehlstunden"];
+
+                        // UrlaubsantragID hinzufügen
+                        if (row["UrlaubsantragID"] != DBNull.Value)
+                        {
+                            targetRow["UrlaubsantragID"] = row["UrlaubsantragID"];
+                        }
+
                         übersichtTable.Rows.Add(targetRow);
                     }
 
+                    // Urlaubsdaten füllen (KWs)
                     var urlaubRows = myData.Tables["Mitarbeiter"].AsEnumerable()
                         .Where(urlaubRow => urlaubRow["Name"].ToString() == row["Name"].ToString());
 
@@ -107,8 +117,20 @@ namespace Urlaubsplanung
                     }
                 }
             }
+
             this.dataGridView1.DataSource = übersicht;
             this.dataGridView1.DataMember = "Übersicht";
+
+            if (dataGridView1.Columns["UrlaubsantragID"] == null)
+            {
+                MessageBox.Show("UrlaubsantragID-Spalte wurde nicht geladen!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            if (dataGridView1.Columns["UrlaubsantragID"] != null)
+            {
+                dataGridView1.Columns["UrlaubsantragID"].Visible = false;
+            }
+
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -127,7 +149,7 @@ namespace Urlaubsplanung
             DataSet retValue = new DataSet();
 
             // Bastle einen SQL-Befehl in Form eines Strings, der mir die Daten aus der DB holen soll
-            string sqlCommand = String.Concat("SELECT Name, Urlaubsanspruch, Fehlstunden, DatumBeginn, DatumEnde FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID");
+            string sqlCommand = String.Concat("SELECT Mitarbeiter.Name, Mitarbeiter.Urlaubsanspruch, Mitarbeiter.Fehlstunden, Urlaubsantrag.UrlaubsantragID, Urlaubsantrag.DatumBeginn, Urlaubsantrag.DatumEnde, Urlaubsantrag.Grund, Urlaubsantrag.Status FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID");
 
             // Erstelle mir einen SQL-Befehl für meine DB Verbindung
             SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, cn);
@@ -144,36 +166,109 @@ namespace Urlaubsplanung
 
         private void button1_Click(object sender, EventArgs e)
         {
-            UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.Green, "Der Antrag wurde genehmigt.");
+            try
+            {
+                int urlaubsantragID = GetSelectedUrlaubsantragID();
+                UpdateStatus(urlaubsantragID, EnumStatus.Status.Genehmigt);
+                UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.Green, "Status aktualisiert!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            UpdateSelectedCell(EnumStatus.Status.Abgelehnt, Color.Red, "Der Antrag wurde abgelehnt.");
+            try
+            {
+                int urlaubsantragID = GetSelectedUrlaubsantragID();
+                UpdateStatus(urlaubsantragID, EnumStatus.Status.Abgelehnt);
+                UpdateSelectedCell(EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void UpdateSelectedCell(EnumStatus.Status status, Color color, string message)
         {
-            if (dataGridView1.CurrentCell != null)
+            if (dataGridView1.CurrentRow != null)
             {
-                var cell = dataGridView1.CurrentCell;
-
-                if (cell.Value != null && !string.IsNullOrWhiteSpace(cell.Value.ToString()))
+                // Stelle sicher, dass die Spalte mit dem Datum (KW-Spalten) ausgewählt wurde
+                if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.OwningColumn.Name.StartsWith("KW"))
                 {
-                    cell.Tag = status;
-                    cell.Style.BackColor = color;
-                    MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    var cell = dataGridView1.CurrentCell;
+
+                    // Überprüfe, ob die Zelle ein Datum enthält
+                    if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
+                    {
+                        // Setze den Status als Tag (falls später benötigt)
+                        cell.Tag = status;
+
+                        // Ändere die Hintergrundfarbe der Zelle
+                        cell.Style.BackColor = color;
+
+                        // Zeige die Erfolgsnachricht
+                        MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Die ausgewählte Zelle enthält kein gültiges Datum.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Ungültige Auswahl. Wählen Sie eine gültige Zelle mit Daten aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Bitte wählen Sie eine gültige KW-Zelle aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                MessageBox.Show("Keine Zelle ausgewählt.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Keine Zeile ausgewählt.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
+
+        // Update des enum status in der Datenbank, (0 = Ausstehend, 1 = Genehmigt, 2 = Abgelehnt)
+        private void UpdateStatus(int urlaubsantragID, EnumStatus.Status status)
+        {
+            string query = "UPDATE Urlaubsantrag SET Status = @Status WHERE UrlaubsantragID = @UrlaubsantragID";
+
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                cmd.Parameters.AddWithValue("@Status", (int)status);
+                cmd.Parameters.AddWithValue("@UrlaubsantragID", urlaubsantragID);
+
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Fehler beim Aktualisieren des Status: " + ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        // UrlaubsantragID bekommen
+        private int GetSelectedUrlaubsantragID()
+        {
+            if (dataGridView1.CurrentRow != null)
+            {
+                if (dataGridView1.Columns["UrlaubsantragID"] == null)
+                {
+                    throw new Exception("Die Spalte UrlaubsantragID konnte nicht gefunden werden.");
+                }
+
+                var cellValue = dataGridView1.CurrentRow.Cells["UrlaubsantragID"].Value;
+                if (cellValue != null && int.TryParse(cellValue.ToString(), out int urlaubsantragID))
+                {
+                    return urlaubsantragID;
+                }
+            }
+
+            throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
+        }
     }
 }

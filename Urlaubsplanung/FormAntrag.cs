@@ -91,12 +91,13 @@ namespace Urlaubsplanung
         private async void button1_Click(object sender, EventArgs e)
         {   using (cn)
             {
-                cmd = new SqlCommand(
-                "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name", cn);
-                cmd.Parameters.AddWithValue("@Name", label6.Text);
+            cmd = new SqlCommand(
+            "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name", cn);
+            cmd.Parameters.AddWithValue("@Name", label6.Text);
 
-                dr = cmd.ExecuteReader();
-                if (dr.Read())
+            dr = cmd.ExecuteReader();
+                    
+            if (dr.Read())
                 {
                     int? nMitarbeiterID = dr.GetInt32(0);
 
@@ -111,7 +112,7 @@ namespace Urlaubsplanung
                     cmd.Parameters.AddWithValue("@Grund", textBox1.Text);
                     cmd.Parameters.AddWithValue("@Status", 0);
                     cmd.ExecuteNonQuery();
-                    
+
                     MessageBox.Show("Ihr Antrag wurde eingereicht.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -120,7 +121,6 @@ namespace Urlaubsplanung
 
                     MessageBox.Show("Mitarbeiter nicht gefunden.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                
             }
         }
 
