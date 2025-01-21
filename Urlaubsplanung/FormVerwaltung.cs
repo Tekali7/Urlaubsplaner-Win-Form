@@ -112,7 +112,7 @@ namespace Urlaubsplanung
 
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
-                            targetRow["KW" + kw] = datumBeginn.ToShortDateString() + "-" + datumEnde.ToShortDateString();
+                            targetRow["KW" + kw] = datumBeginn.ToShortDateString() + " - " + datumEnde.ToShortDateString();
                         }
                     }
                 }
@@ -131,6 +131,7 @@ namespace Urlaubsplanung
                 dataGridView1.Columns["UrlaubsantragID"].Visible = false;
             }
 
+            LoadExistingStatusColors();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -196,21 +197,16 @@ namespace Urlaubsplanung
         {
             if (dataGridView1.CurrentRow != null)
             {
-                // Stelle sicher, dass die Spalte mit dem Datum (KW-Spalten) ausgewählt wurde
+                // Sicherstellen ob Spalte KW '*' ausgewählt wurde
                 if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.OwningColumn.Name.StartsWith("KW"))
                 {
                     var cell = dataGridView1.CurrentCell;
 
-                    // Überprüfe, ob die Zelle ein Datum enthält
+                    // Überprüfen ob Zelle ein datum beinhaltet
                     if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
                     {
-                        // Setze den Status als Tag (falls später benötigt)
                         cell.Tag = status;
-
-                        // Ändere die Hintergrundfarbe der Zelle
                         cell.Style.BackColor = color;
-
-                        // Zeige die Erfolgsnachricht
                         MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
@@ -270,5 +266,74 @@ namespace Urlaubsplanung
 
             throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
         }
+
+        // Übersicht Verwaltung je nach Antragsstatus einfärben
+        private void LoadExistingStatusColors()
+        {
+            try
+            {
+                string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
+
+                using (SqlCommand cmd = new SqlCommand(query, cn))
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!reader.IsDBNull(reader.GetOrdinal("DatumBeginn")) &&
+                                !reader.IsDBNull(reader.GetOrdinal("DatumEnde")) &&
+                                !reader.IsDBNull(reader.GetOrdinal("Status")))
+                            {
+                                DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
+                                DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
+                                int status = reader.GetInt32(reader.GetOrdinal("Status"));
+
+                                // Berechnung der Kalenderwochen
+                                int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                                int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                                // Farbe basierend auf Status
+                                Color cellColor = Color.White;
+                                if (status == (int)EnumStatus.Status.Genehmigt)
+                                {
+                                    cellColor = Color.LightGreen;
+                                }
+                                else if (status == (int)EnumStatus.Status.Abgelehnt)
+                                {
+                                    cellColor = Color.Red;
+                                }
+                                else if (status == (int)EnumStatus.Status.Ausstehend)
+                                {
+                                    cellColor = Color.LightGray;
+                                }
+
+                                // Spalten und Zellen im DataGridView einfärben
+                                foreach (DataGridViewRow row in dataGridView1.Rows)
+                                {
+                                    for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                                    {
+                                        string columnName = "KW" + kw;
+                                        if (dataGridView1.Columns.Contains(columnName))
+                                        {
+                                            var cell = row.Cells[columnName];
+                                            if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
+                                            {
+                                                cell.Style.BackColor = cellColor;
+                                                cell.Tag = (EnumStatus.Status)status;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Fehler beim Laden der Statusfarben: " + ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }
