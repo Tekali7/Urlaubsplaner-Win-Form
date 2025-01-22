@@ -85,12 +85,7 @@ namespace Urlaubsplanung
                         targetRow["Name"] = row["Name"];
                         targetRow["Urlaubsanspruch"] = row["Urlaubsanspruch"];
                         targetRow["Fehlstunden"] = row["Fehlstunden"];
-
-                        // UrlaubsantragID hinzufügen
-                        if (row["UrlaubsantragID"] != DBNull.Value)
-                        {
-                            targetRow["UrlaubsantragID"] = row["UrlaubsantragID"];
-                        }
+                        targetRow["UrlaubsantragID"] = row["UrlaubsantragID"];
 
                         übersichtTable.Rows.Add(targetRow);
                     }
@@ -170,8 +165,7 @@ namespace Urlaubsplanung
             try
             {
                 int urlaubsantragID = GetSelectedUrlaubsantragID();
-                UpdateStatus(urlaubsantragID, EnumStatus.Status.Genehmigt);
-                UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert!");
+                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -184,8 +178,7 @@ namespace Urlaubsplanung
             try
             {
                 int urlaubsantragID = GetSelectedUrlaubsantragID();
-                UpdateStatus(urlaubsantragID, EnumStatus.Status.Abgelehnt);
-                UpdateSelectedCell(EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert!");
+                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -193,21 +186,39 @@ namespace Urlaubsplanung
             }
         }
 
-        private void UpdateSelectedCell(EnumStatus.Status status, Color color, string message)
+        private void UpdateStatusAndCell(int urlaubsantragID, EnumStatus.Status status, Color color, string successMessage)
         {
+            // Update the database status
+            string query = "UPDATE Urlaubsantrag SET Status = @Status WHERE UrlaubsantragID = @UrlaubsantragID";
+
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                cmd.Parameters.AddWithValue("@Status", (int)status);
+                cmd.Parameters.AddWithValue("@UrlaubsantragID", urlaubsantragID);
+
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Fehler beim Aktualisieren des Status: " + ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            // Update the DataGridView cell
             if (dataGridView1.CurrentRow != null)
             {
-                // Sicherstellen ob Spalte KW'*' ausgewählt wurde
                 if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.OwningColumn.Name.StartsWith("KW"))
                 {
                     var cell = dataGridView1.CurrentCell;
 
-                    // Überprüfen ob Zelle ein datum beinhaltet
                     if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
                     {
-                        
+                        cell.Tag = status;
                         cell.Style.BackColor = color;
-                        MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(successMessage, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
                     {
@@ -226,27 +237,6 @@ namespace Urlaubsplanung
         }
 
 
-        // Update des enum status in der Datenbank, (0 = Ausstehend, 1 = Genehmigt, 2 = Abgelehnt)
-        private void UpdateStatus(int urlaubsantragID, EnumStatus.Status status)
-        {
-            string query = "UPDATE Urlaubsantrag SET Status = @Status WHERE UrlaubsantragID = @UrlaubsantragID";
-
-            using (SqlCommand cmd = new SqlCommand(query, cn))
-            {
-                cmd.Parameters.AddWithValue("@Status", (int)status);
-                cmd.Parameters.AddWithValue("@UrlaubsantragID", urlaubsantragID);
-
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Fehler beim Aktualisieren des Status: " + ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
         // UrlaubsantragID bekommen
         private int GetSelectedUrlaubsantragID()
         {
@@ -259,14 +249,14 @@ namespace Urlaubsplanung
 
                 var cellValue = dataGridView1.CurrentRow.Cells["UrlaubsantragID"].Value;
                 if (cellValue != null && int.TryParse(cellValue.ToString(), out int urlaubsantragID))
-                {
-                    return urlaubsantragID;
+                    {
+                        return urlaubsantragID;
+                    }
                 }
-            }
             throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
         }
 
-        // Übersicht Verwaltung je nach Antragsstatus ein
+        // Übersicht Verwaltung je nach Antragsstatus einfärben
         private void LoadExistingStatusColors()
         {           
             string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
@@ -276,52 +266,48 @@ namespace Urlaubsplanung
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
-                    {
-                        if (!reader.IsDBNull(reader.GetOrdinal("DatumBeginn")) &&
-                            !reader.IsDBNull(reader.GetOrdinal("DatumEnde")) &&
-                            !reader.IsDBNull(reader.GetOrdinal("Status")))
+                    {                      
+                        DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
+                        DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
+                        int status = reader.GetInt32(reader.GetOrdinal("Status"));
+
+                        // Berechnung der Kalenderwochen
+                        int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                        // Farbe basierend auf Status
+                        Color cellColor = Color.White;
+                        if (status == (int)EnumStatus.Status.Genehmigt)
                         {
-                            DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
-                            DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
-                            int status = reader.GetInt32(reader.GetOrdinal("Status"));
+                            cellColor = Color.LightGreen;
+                        }
+                        else if (status == (int)EnumStatus.Status.Abgelehnt)
+                        {
+                            cellColor = Color.Red;
+                        }
+                        else if (status == (int)EnumStatus.Status.Ausstehend)
+                        {
+                            cellColor = Color.LightGray;
+                        }
 
-                            // Berechnung der Kalenderwochen
-                            int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                            int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-
-                            // Farbe basierend auf Status
-                            Color cellColor = Color.White;
-                            if (status == (int)EnumStatus.Status.Genehmigt)
+                        // Spalten und Zellen im DataGridView einfärben
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            for (int kw = kwBeginn; kw <= kwEnde; kw++)
                             {
-                                cellColor = Color.LightGreen;
-                            }
-                            else if (status == (int)EnumStatus.Status.Abgelehnt)
-                            {
-                                cellColor = Color.Red;
-                            }
-                            else if (status == (int)EnumStatus.Status.Ausstehend)
-                            {
-                                cellColor = Color.LightGray;
-                            }
-
-                            // Spalten und Zellen im DataGridView einfärben
-                            foreach (DataGridViewRow row in dataGridView1.Rows)
-                            {
-                                for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                                string columnName = "KW" + kw;
+                                if (dataGridView1.Columns.Contains(columnName))
                                 {
-                                    string columnName = "KW" + kw;
-                                    if (dataGridView1.Columns.Contains(columnName))
+                                    var cell = row.Cells[columnName];
+                                    if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
                                     {
-                                        var cell = row.Cells[columnName];
-                                        if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
-                                        {
-                                            cell.Style.BackColor = cellColor;
-                                            cell.Tag = (EnumStatus.Status)status;
-                                        }
+                                        cell.Style.BackColor = cellColor;
+                                        cell.Tag = (EnumStatus.Status)status;
                                     }
                                 }
                             }
                         }
+                        
                     }
                 }
             } 
