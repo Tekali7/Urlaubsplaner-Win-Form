@@ -188,7 +188,6 @@ namespace Urlaubsplanung
 
         private void UpdateStatusAndCell(int urlaubsantragID, EnumStatus.Status status, Color color, string successMessage)
         {
-            // Update the database status
             string query = "UPDATE Urlaubsantrag SET Status = @Status WHERE UrlaubsantragID = @UrlaubsantragID";
 
             using (SqlCommand cmd = new SqlCommand(query, cn))
@@ -207,32 +206,24 @@ namespace Urlaubsplanung
                 }
             }
 
-            // Update the DataGridView cell
+            // Zelle einfärben
             if (dataGridView1.CurrentRow != null)
             {
-                if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.OwningColumn.Name.StartsWith("KW"))
-                {
-                    var cell = dataGridView1.CurrentCell;
+                var cell = dataGridView1.CurrentCell;
 
                     if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
-                    {
-                        cell.Tag = status;
-                        cell.Style.BackColor = color;
-                        MessageBox.Show(successMessage, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Die ausgewählte Zelle enthält kein gültiges Datum.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                {
+                    cell.Style.BackColor = color;
+                    MessageBox.Show(successMessage, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Bitte wählen Sie eine gültige KW-Zelle aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Die ausgewählte Zelle enthält kein gültiges Datum.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                MessageBox.Show("Keine Zeile ausgewählt.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Bitte wählen Sie eine gültige KW-Zelle aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -249,14 +240,15 @@ namespace Urlaubsplanung
 
                 var cellValue = dataGridView1.CurrentRow.Cells["UrlaubsantragID"].Value;
                 if (cellValue != null && int.TryParse(cellValue.ToString(), out int urlaubsantragID))
-                    {
-                        return urlaubsantragID;
-                    }
+                {
+                    return urlaubsantragID;
                 }
+            }
             throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
         }
 
-        // Übersicht Verwaltung je nach Antragsstatus einfärben
+
+        // Übersicht Verwaltung je nach Antragsstatus einfärben beim Laden
         private void LoadExistingStatusColors()
         {           
             string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
