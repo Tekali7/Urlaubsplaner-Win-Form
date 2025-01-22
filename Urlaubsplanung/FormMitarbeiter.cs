@@ -137,7 +137,7 @@ namespace Urlaubsplanung
         private void LoadResturlaubLabel()
         {
             int Resturlaub = Urlaubsanspruch - Fehlstunden;
-            label8.Text = Resturlaub.ToString() + " h";
+            label8.Text = Resturlaub.ToString() + " h"; 
         }
 
         private void button1_Click(object sender, EventArgs e)

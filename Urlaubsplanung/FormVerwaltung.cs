@@ -128,7 +128,7 @@ namespace Urlaubsplanung
 
             if (dataGridView1.Columns["UrlaubsantragID"] != null)
             {
-                dataGridView1.Columns["UrlaubsantragID"].Visible = false;
+                dataGridView1.Columns["UrlaubsantragID"].Visible = true;
             }
 
             LoadExistingStatusColors();
@@ -171,7 +171,7 @@ namespace Urlaubsplanung
             {
                 int urlaubsantragID = GetSelectedUrlaubsantragID();
                 UpdateStatus(urlaubsantragID, EnumStatus.Status.Genehmigt);
-                UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.Green, "Status aktualisiert!");
+                UpdateSelectedCell(EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert!");
             }
             catch (Exception ex)
             {
@@ -197,7 +197,7 @@ namespace Urlaubsplanung
         {
             if (dataGridView1.CurrentRow != null)
             {
-                // Sicherstellen ob Spalte KW '*' ausgewählt wurde
+                // Sicherstellen ob Spalte KW'*' ausgewählt wurde
                 if (dataGridView1.CurrentCell != null && dataGridView1.CurrentCell.OwningColumn.Name.StartsWith("KW"))
                 {
                     var cell = dataGridView1.CurrentCell;
@@ -205,7 +205,7 @@ namespace Urlaubsplanung
                     // Überprüfen ob Zelle ein datum beinhaltet
                     if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
                     {
-                        cell.Tag = status;
+                        
                         cell.Style.BackColor = color;
                         MessageBox.Show(message, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
@@ -263,64 +263,60 @@ namespace Urlaubsplanung
                     return urlaubsantragID;
                 }
             }
-
             throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
         }
 
-        // Übersicht Verwaltung je nach Antragsstatus einfärben
+        // Übersicht Verwaltung je nach Antragsstatus ein
         private void LoadExistingStatusColors()
-        {
-            try
+        {           
+            string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
+
+            using (SqlCommand cmd = new SqlCommand(query, cn))
             {
-                string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
-
-                using (SqlCommand cmd = new SqlCommand(query, cn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
+                        if (!reader.IsDBNull(reader.GetOrdinal("DatumBeginn")) &&
+                            !reader.IsDBNull(reader.GetOrdinal("DatumEnde")) &&
+                            !reader.IsDBNull(reader.GetOrdinal("Status")))
                         {
-                            if (!reader.IsDBNull(reader.GetOrdinal("DatumBeginn")) &&
-                                !reader.IsDBNull(reader.GetOrdinal("DatumEnde")) &&
-                                !reader.IsDBNull(reader.GetOrdinal("Status")))
+                            DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
+                            DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
+                            int status = reader.GetInt32(reader.GetOrdinal("Status"));
+
+                            // Berechnung der Kalenderwochen
+                            int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                            int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                            // Farbe basierend auf Status
+                            Color cellColor = Color.White;
+                            if (status == (int)EnumStatus.Status.Genehmigt)
                             {
-                                DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
-                                DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
-                                int status = reader.GetInt32(reader.GetOrdinal("Status"));
+                                cellColor = Color.LightGreen;
+                            }
+                            else if (status == (int)EnumStatus.Status.Abgelehnt)
+                            {
+                                cellColor = Color.Red;
+                            }
+                            else if (status == (int)EnumStatus.Status.Ausstehend)
+                            {
+                                cellColor = Color.LightGray;
+                            }
 
-                                // Berechnung der Kalenderwochen
-                                int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                                int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-
-                                // Farbe basierend auf Status
-                                Color cellColor = Color.White;
-                                if (status == (int)EnumStatus.Status.Genehmigt)
+                            // Spalten und Zellen im DataGridView einfärben
+                            foreach (DataGridViewRow row in dataGridView1.Rows)
+                            {
+                                for (int kw = kwBeginn; kw <= kwEnde; kw++)
                                 {
-                                    cellColor = Color.LightGreen;
-                                }
-                                else if (status == (int)EnumStatus.Status.Abgelehnt)
-                                {
-                                    cellColor = Color.Red;
-                                }
-                                else if (status == (int)EnumStatus.Status.Ausstehend)
-                                {
-                                    cellColor = Color.LightGray;
-                                }
-
-                                // Spalten und Zellen im DataGridView einfärben
-                                foreach (DataGridViewRow row in dataGridView1.Rows)
-                                {
-                                    for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                                    string columnName = "KW" + kw;
+                                    if (dataGridView1.Columns.Contains(columnName))
                                     {
-                                        string columnName = "KW" + kw;
-                                        if (dataGridView1.Columns.Contains(columnName))
+                                        var cell = row.Cells[columnName];
+                                        if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
                                         {
-                                            var cell = row.Cells[columnName];
-                                            if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
-                                            {
-                                                cell.Style.BackColor = cellColor;
-                                                cell.Tag = (EnumStatus.Status)status;
-                                            }
+                                            cell.Style.BackColor = cellColor;
+                                            cell.Tag = (EnumStatus.Status)status;
                                         }
                                     }
                                 }
@@ -328,12 +324,7 @@ namespace Urlaubsplanung
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Fehler beim Laden der Statusfarben: " + ex.Message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            } 
         }
-
     }
 }
