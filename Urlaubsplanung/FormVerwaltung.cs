@@ -103,7 +103,7 @@ namespace Urlaubsplanung
                         }
 
                         int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);                        
 
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
@@ -145,7 +145,7 @@ namespace Urlaubsplanung
             DataSet retValue = new DataSet();
 
             // Bastle einen SQL-Befehl in Form eines Strings, der mir die Daten aus der DB holen soll
-            string sqlCommand = String.Concat("SELECT Mitarbeiter.Name, Mitarbeiter.Urlaubsanspruch, Mitarbeiter.Fehlstunden, Urlaubsantrag.UrlaubsantragID, Urlaubsantrag.DatumBeginn, Urlaubsantrag.DatumEnde, Urlaubsantrag.Grund, Urlaubsantrag.Status FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID");
+            string sqlCommand = String.Concat("SELECT Mitarbeiter.MitarbeiterID, Mitarbeiter.Name, Mitarbeiter.Urlaubsanspruch, Mitarbeiter.Fehlstunden, Urlaubsantrag.UrlaubsantragID, Urlaubsantrag.DatumBeginn, Urlaubsantrag.DatumEnde, Urlaubsantrag.Grund, Urlaubsantrag.Status FROM ", tableName, " FULL OUTER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID");
 
             // Erstelle mir einen SQL-Befehl für meine DB Verbindung
             SqlDataAdapter cmd = new SqlDataAdapter(sqlCommand, cn);
@@ -164,8 +164,10 @@ namespace Urlaubsplanung
         {
             try
             {
-                int urlaubsantragID = GetSelectedUrlaubsantragID();
-                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert");
+                GetMitarbeiterID();
+                DateParsing();
+                //int urlaubsantragID = GetUrlaubsantragID();
+                //UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -177,8 +179,8 @@ namespace Urlaubsplanung
         {
             try
             {
-                int urlaubsantragID = GetSelectedUrlaubsantragID();
-                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert");
+                //int urlaubsantragID = GetUrlaubsantragID();
+                //UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -211,46 +213,102 @@ namespace Urlaubsplanung
             {
                 var cell = dataGridView1.CurrentCell;
 
-                    if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
+                if (cell.Value != null && DateTime.TryParse(cell.Value.ToString().Split('-')[0], out _))
                 {
                     cell.Style.BackColor = color;
                     MessageBox.Show(successMessage, "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
-                        MessageBox.Show("Die ausgewählte Zelle enthält kein gültiges Datum.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Die ausgewählte Zelle enthält kein gültiges Datum.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                    MessageBox.Show("Bitte wählen Sie eine gültige KW-Zelle aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Bitte wählen Sie eine gültige KW-Zelle aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
 
-        // UrlaubsantragID bekommen
-        private int GetSelectedUrlaubsantragID()
+        // MitarbeiterID bekommen
+        private int GetMitarbeiterID()
         {
-            if (dataGridView1.CurrentRow != null)
-            {
-                if (dataGridView1.Columns["UrlaubsantragID"] == null)
-                {
-                    throw new Exception("Die Spalte UrlaubsantragID konnte nicht gefunden werden.");
-                }
+            // Von Zeile Name holen
+            string sCurrName = dataGridView1.CurrentRow.Cells["Name"].Value.ToString();
 
-                var cellValue = dataGridView1.CurrentRow.Cells["UrlaubsantragID"].Value;
-                if (cellValue != null && int.TryParse(cellValue.ToString(), out int urlaubsantragID))
+            string query = "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name";
+
+            
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                cmd.Parameters.AddWithValue("Name", sCurrName);                
+
+                object result = cmd.ExecuteScalar();
+
+                if (result != null)
                 {
-                    return urlaubsantragID;
+                    int mitarbeiterID = Convert.ToInt32(result);
+                    return mitarbeiterID;
                 }
             }
-            throw new Exception("UrlaubsantragID konnte nicht ermittelt werden.");
+            return 0;
         }
 
+        private void DateParsing()
+        {
+            string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE DatumBeginn = @DatumBeginn OR DatumEnde = @DatumEnde";
+
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                for (int i = 1; i <= 52; i++)
+                {
+                    string spaltenName = $"KW{i}";
+
+                    if (dataGridView1.CurrentRow.Cells[spaltenName].Value != null)
+                    {
+                        string datumString = dataGridView1.CurrentRow.Cells[spaltenName].Value.ToString();
+                        string[] datumsArray = datumString.Split('-');
+
+                        if (datumsArray.Length == 2 &&
+                            DateTime.TryParse(datumsArray[0].Trim(), out DateTime datumBeginnGeparst) &&
+                            DateTime.TryParse(datumsArray[1].Trim(), out DateTime datumEndeGeparst))
+                        {
+                            cmd.Parameters.Clear();
+                            cmd.Parameters.AddWithValue("@DatumBeginn", datumBeginnGeparst);
+                            cmd.Parameters.AddWithValue("@DatumEnde", datumEndeGeparst);
+
+                            using (SqlDataReader dr = cmd.ExecuteReader())
+                            {
+                                while (dr.Read())
+                                {
+                                    DateTime datumBeginn = dr.GetDateTime(0); 
+                                    DateTime datumEnde = dr.GetDateTime(1);  
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        //private int GetUrlaubsantragID()
+        //{
+        //    string query = "SELECT UrlaubsantragID FROM Urlaubsantrag WHERE Name = @Name, DatumBeginn = @DatumBeginn, DatumEnde = @DatumEnde";
+
+        //    using (SqlCommand cmd = new SqlCommand(query))
+        //    {
+        //        cmd.Parameters.AddWithValue("DatumBeginn", DatumBeginn);
+        //        cmd.Parameters.AddWithValue("DatumEnde", DatumEnde);
+
+        //        cmd.ExecuteNonQuery();
+        //    }
+        //}
 
         // Übersicht Verwaltung je nach Antragsstatus einfärben beim Laden
         private void LoadExistingStatusColors()
-        {           
+        {
             string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
 
             using (SqlCommand cmd = new SqlCommand(query, cn))
@@ -258,12 +316,12 @@ namespace Urlaubsplanung
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
-                    {                      
+                    {
                         DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
                         DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
                         int status = reader.GetInt32(reader.GetOrdinal("Status"));
 
-                        // Berechnung der Kalenderwochen
+                        // Kalenderwochen berechnen
                         int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
                         int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
 
@@ -299,10 +357,10 @@ namespace Urlaubsplanung
                                 }
                             }
                         }
-                        
+
                     }
                 }
-            } 
+            }
         }
     }
 }
