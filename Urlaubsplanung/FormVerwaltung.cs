@@ -164,10 +164,20 @@ namespace Urlaubsplanung
         {
             try
             {
-                GetMitarbeiterID();
-                DateParsing();
-                //int urlaubsantragID = GetUrlaubsantragID();
-                //UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert");
+                int mitarbeiterID = GetMitarbeiterID();
+
+                DateTime datumBeginn = DateTime.MinValue;
+                DateTime datumEnde = DateTime.MaxValue;
+
+                var result = DateParsing();
+                if (result.HasValue) 
+                {
+                    datumBeginn = result.Value.Item1;
+                    datumEnde = result.Value.Item2;
+                }
+
+                int urlaubsantragID = GetUrlaubsantragID(mitarbeiterID, datumBeginn, datumEnde);
+                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Genehmigt, Color.LightGreen, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -179,8 +189,20 @@ namespace Urlaubsplanung
         {
             try
             {
-                //int urlaubsantragID = GetUrlaubsantragID();
-                //UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert");
+                int mitarbeiterID = GetMitarbeiterID();
+
+                DateTime datumBeginn = DateTime.MinValue;
+                DateTime datumEnde = DateTime.MaxValue;
+
+                var result = DateParsing();
+                if (result.HasValue)
+                {
+                    datumBeginn = result.Value.Item1;
+                    datumEnde = result.Value.Item2;
+                }
+
+                int urlaubsantragID = GetUrlaubsantragID(mitarbeiterID, datumBeginn, datumEnde);
+                UpdateStatusAndCell(urlaubsantragID, EnumStatus.Status.Abgelehnt, Color.Red, "Status aktualisiert");
             }
             catch (Exception ex)
             {
@@ -237,7 +259,6 @@ namespace Urlaubsplanung
             string sCurrName = dataGridView1.CurrentRow.Cells["Name"].Value.ToString();
 
             string query = "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name";
-
             
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
@@ -254,57 +275,68 @@ namespace Urlaubsplanung
             return 0;
         }
 
-        private void DateParsing()
+        private (DateTime, DateTime)? DateParsing()
         {
-            string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE DatumBeginn = @DatumBeginn OR DatumEnde = @DatumEnde";
+            string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE DatumBeginn = @DatumBeginn AND DatumEnde = @DatumEnde";
 
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
-                for (int i = 1; i <= 52; i++)
+                string spaltenName = dataGridView1.CurrentCell.OwningColumn.Name;
+
+                if (dataGridView1.CurrentRow.Cells[spaltenName].Value != null)
                 {
-                    string spaltenName = $"KW{i}";
+                    string datumString = dataGridView1.CurrentRow.Cells[spaltenName].Value.ToString();
+                    string[] datumsArray = datumString.Split('-');
 
-                    if (dataGridView1.CurrentRow.Cells[spaltenName].Value != null)
+                    if (datumsArray.Length == 2 &&
+                        DateTime.TryParse(datumsArray[0].Trim(), out DateTime datumBeginnGeparst) &&
+                        DateTime.TryParse(datumsArray[1].Trim(), out DateTime datumEndeGeparst))
                     {
-                        string datumString = dataGridView1.CurrentRow.Cells[spaltenName].Value.ToString();
-                        string[] datumsArray = datumString.Split('-');
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@DatumBeginn", datumBeginnGeparst);
+                        cmd.Parameters.AddWithValue("@DatumEnde", datumEndeGeparst);
 
-                        if (datumsArray.Length == 2 &&
-                            DateTime.TryParse(datumsArray[0].Trim(), out DateTime datumBeginnGeparst) &&
-                            DateTime.TryParse(datumsArray[1].Trim(), out DateTime datumEndeGeparst))
+                        using (SqlDataReader dr = cmd.ExecuteReader())
                         {
-                            cmd.Parameters.Clear();
-                            cmd.Parameters.AddWithValue("@DatumBeginn", datumBeginnGeparst);
-                            cmd.Parameters.AddWithValue("@DatumEnde", datumEndeGeparst);
 
-                            using (SqlDataReader dr = cmd.ExecuteReader())
+                            if (dr.Read())
                             {
-                                while (dr.Read())
-                                {
-                                    DateTime datumBeginn = dr.GetDateTime(0); 
-                                    DateTime datumEnde = dr.GetDateTime(1);  
-                                }
+                                DateTime datumBeginn = dr.GetDateTime(0);
+                                DateTime datumEnde = dr.GetDateTime(1);
+                                return (datumBeginn, datumEnde);
                             }
                         }
-                    }
+                    }                   
                 }
+                
             }
+            return null;
         }
 
 
 
-        //private int GetUrlaubsantragID()
-        //{
-        //    string query = "SELECT UrlaubsantragID FROM Urlaubsantrag WHERE Name = @Name, DatumBeginn = @DatumBeginn, DatumEnde = @DatumEnde";
+        private int GetUrlaubsantragID(int mitarbeiterID, DateTime datumBeginn, DateTime datumEnde)
+        {
+            string query = "SELECT UrlaubsantragID FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID AND DatumBeginn = @DatumBeginn AND DatumEnde = @DatumEnde";
 
-        //    using (SqlCommand cmd = new SqlCommand(query))
-        //    {
-        //        cmd.Parameters.AddWithValue("DatumBeginn", DatumBeginn);
-        //        cmd.Parameters.AddWithValue("DatumEnde", DatumEnde);
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("MitarbeiterID", mitarbeiterID);
+                cmd.Parameters.AddWithValue("DatumBeginn", datumBeginn);
+                cmd.Parameters.AddWithValue("DatumEnde", datumEnde);
 
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //}
+                SqlDataReader dr = cmd.ExecuteReader();
+
+                if (dr.Read())
+                {
+                    int urlaubsantragID = Convert.ToInt32(dr["UrlaubsantragID"]);
+                    dr.Close();
+                    return urlaubsantragID;
+                }
+            }
+            return 0;
+        }
 
         // Übersicht Verwaltung je nach Antragsstatus einfärben beim Laden
         private void LoadExistingStatusColors()
@@ -313,54 +345,53 @@ namespace Urlaubsplanung
 
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                SqlDataReader reader = cmd.ExecuteReader();
+                
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
+                    DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
+                    int status = reader.GetInt32(reader.GetOrdinal("Status"));
+
+                    // Kalenderwochen berechnen
+                    int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                    int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                    // Farbe basierend auf Status
+                    Color cellColor = Color.White;
+                    if (status == (int)EnumStatus.Status.Genehmigt)
                     {
-                        DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
-                        DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
-                        int status = reader.GetInt32(reader.GetOrdinal("Status"));
+                        cellColor = Color.LightGreen;
+                    }
+                    else if (status == (int)EnumStatus.Status.Abgelehnt)
+                    {
+                        cellColor = Color.Red;
+                    }
+                    else if (status == (int)EnumStatus.Status.Ausstehend)
+                    {
+                        cellColor = Color.LightGray;
+                    }
 
-                        // Kalenderwochen berechnen
-                        int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-
-                        // Farbe basierend auf Status
-                        Color cellColor = Color.White;
-                        if (status == (int)EnumStatus.Status.Genehmigt)
+                    // Spalten und Zellen im DataGridView einfärben
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
-                            cellColor = Color.LightGreen;
-                        }
-                        else if (status == (int)EnumStatus.Status.Abgelehnt)
-                        {
-                            cellColor = Color.Red;
-                        }
-                        else if (status == (int)EnumStatus.Status.Ausstehend)
-                        {
-                            cellColor = Color.LightGray;
-                        }
-
-                        // Spalten und Zellen im DataGridView einfärben
-                        foreach (DataGridViewRow row in dataGridView1.Rows)
-                        {
-                            for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                            string columnName = "KW" + kw;
+                            if (dataGridView1.Columns.Contains(columnName))
                             {
-                                string columnName = "KW" + kw;
-                                if (dataGridView1.Columns.Contains(columnName))
+                                var cell = row.Cells[columnName];
+                                if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
                                 {
-                                    var cell = row.Cells[columnName];
-                                    if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
-                                    {
-                                        cell.Style.BackColor = cellColor;
-                                        cell.Tag = (EnumStatus.Status)status;
-                                    }
+                                    cell.Style.BackColor = cellColor;
+                                    cell.Tag = (EnumStatus.Status)status;
                                 }
                             }
                         }
-
                     }
                 }
-            }
+                reader.Close();
+            }            
         }
     }
 }
