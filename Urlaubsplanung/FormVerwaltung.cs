@@ -362,7 +362,6 @@ namespace Urlaubsplanung
                 
                 while (reader.Read())
                 {
-                    DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
                     DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
                     int status = reader.GetInt32(reader.GetOrdinal("Status"));
 
