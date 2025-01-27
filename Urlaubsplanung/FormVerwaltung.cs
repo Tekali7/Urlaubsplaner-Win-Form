@@ -126,6 +126,10 @@ namespace Urlaubsplanung
                 dataGridView1.Columns["UrlaubsantragID"].Visible = true;
             }
 
+            this.dataGridView1.Columns["Name"].Frozen = true;
+            this.dataGridView1.Columns["Urlaubsanspruch"].Frozen = true;
+            this.dataGridView1.Columns["Fehlstunden"].Frozen = true;
+
             LoadExistingStatusColors();
         }
 
