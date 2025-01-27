@@ -126,9 +126,18 @@ namespace Urlaubsplanung
                 dataGridView1.Columns["UrlaubsantragID"].Visible = true;
             }
 
+            // Spalte "Name" an der Seite fixieren
             this.dataGridView1.Columns["Name"].Frozen = true;
+
+            // Spalte "Urlaubsanspruch" an der Seite fixieren und Spaltenbreite autom. anpassen
             this.dataGridView1.Columns["Urlaubsanspruch"].Frozen = true;
+            DataGridViewColumn columnUrlaubsanspruch = dataGridView1.Columns[1];
+            columnUrlaubsanspruch.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
+
+            // Spalte "Fehlstunden" an der Seite fixieren und Spaltenbreite autom. anpassen
             this.dataGridView1.Columns["Fehlstunden"].Frozen = true;
+            DataGridViewColumn columnFehlstunden = dataGridView1.Columns[2];
+            columnFehlstunden.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
 
             LoadExistingStatusColors();
         }
