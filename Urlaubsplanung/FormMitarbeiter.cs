@@ -15,7 +15,6 @@ namespace Urlaubsplanung
 {
     public partial class FormMitarbeiter : Form
     {
-
         SqlCommand cmd;
         SqlConnection cn;
         SqlDataReader dr;

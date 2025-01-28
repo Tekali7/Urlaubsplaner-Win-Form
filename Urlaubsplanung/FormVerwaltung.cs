@@ -131,12 +131,14 @@ namespace Urlaubsplanung
 
             // Spalte "Urlaubsanspruch" an der Seite fixieren und Spaltenbreite autom. anpassen
             this.dataGridView1.Columns["Urlaubsanspruch"].Frozen = true;
-            DataGridViewColumn columnUrlaubsanspruch = dataGridView1.Columns[1];
+            DataGridViewColumn columnUrlaubsanspruch = new DataGridViewColumn();
+            columnUrlaubsanspruch = dataGridView1.Columns[1];
             columnUrlaubsanspruch.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
 
             // Spalte "Fehlstunden" an der Seite fixieren und Spaltenbreite autom. anpassen
             this.dataGridView1.Columns["Fehlstunden"].Frozen = true;
-            DataGridViewColumn columnFehlstunden = dataGridView1.Columns[2];
+            DataGridViewColumn columnFehlstunden = new DataGridViewColumn();
+            columnFehlstunden = dataGridView1.Columns[2];
             columnFehlstunden.AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
 
             LoadExistingStatusColors();
@@ -288,6 +290,7 @@ namespace Urlaubsplanung
             return 0;
         }
 
+        // DatumBeginn und DatumEnde parsen
         private (DateTime, DateTime)? DateParsing()
         {
             string query = "SELECT DatumBeginn, DatumEnde FROM Urlaubsantrag WHERE DatumBeginn = @DatumBeginn AND DatumEnde = @DatumEnde";
@@ -311,7 +314,6 @@ namespace Urlaubsplanung
 
                         using (SqlDataReader dr = cmd.ExecuteReader())
                         {
-
                             if (dr.Read())
                             {
                                 DateTime datumBeginn = dr.GetDateTime(0);
@@ -359,19 +361,20 @@ namespace Urlaubsplanung
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
                 SqlDataReader reader = cmd.ExecuteReader();
-                
+
                 while (reader.Read())
                 {
+                    DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
                     DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
                     int status = reader.GetInt32(reader.GetOrdinal("Status"));
 
                     // Kalenderwochen berechnen
-                    int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                    int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                    int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
 
                     // Farbe basierend auf Status
                     Color cellColor = Color.White;
-                    if (status == (int)EnumStatus.Status.Genehmigt)
+                    if (status == (int)EnumStatus.Status.Genehmigt) 
                     {
                         cellColor = Color.LightGreen;
                     }
@@ -403,7 +406,12 @@ namespace Urlaubsplanung
                     }
                 }
                 reader.Close();
-            }            
+            }
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
