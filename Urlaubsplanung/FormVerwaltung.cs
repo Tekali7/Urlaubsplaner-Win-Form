@@ -58,7 +58,6 @@ namespace Urlaubsplanung
             übersichtTable.Columns.Add("Name");
             übersichtTable.Columns.Add("Urlaubsanspruch");
             übersichtTable.Columns.Add("Fehlstunden");
-            übersichtTable.Columns.Add("UrlaubsantragID");
             for (int i = 1; i <= 52; i++)
             {
                 übersichtTable.Columns.Add("KW" + i);
@@ -85,7 +84,6 @@ namespace Urlaubsplanung
                         targetRow["Name"] = row["Name"];
                         targetRow["Urlaubsanspruch"] = row["Urlaubsanspruch"];
                         targetRow["Fehlstunden"] = row["Fehlstunden"];
-                        targetRow["UrlaubsantragID"] = row["UrlaubsantragID"];
 
                         übersichtTable.Rows.Add(targetRow);
                     }
@@ -115,16 +113,6 @@ namespace Urlaubsplanung
 
             this.dataGridView1.DataSource = übersicht;
             this.dataGridView1.DataMember = "Übersicht";
-
-            if (dataGridView1.Columns["UrlaubsantragID"] == null)
-            {
-                MessageBox.Show("UrlaubsantragID-Spalte wurde nicht geladen!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            if (dataGridView1.Columns["UrlaubsantragID"] != null)
-            {
-                dataGridView1.Columns["UrlaubsantragID"].Visible = true;
-            }
 
             // Spalte "Name" an der Seite fixieren
             this.dataGridView1.Columns["Name"].Frozen = true;
