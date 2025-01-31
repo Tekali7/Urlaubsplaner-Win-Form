@@ -101,7 +101,7 @@ namespace Urlaubsplanung
                         }
 
                         int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);                        
+                        int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
 
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
@@ -173,7 +173,7 @@ namespace Urlaubsplanung
                 DateTime datumEnde = DateTime.MaxValue;
 
                 var result = DateParsing();
-                if (result.HasValue) 
+                if (result.HasValue)
                 {
                     datumBeginn = result.Value.Item1;
                     datumEnde = result.Value.Item2;
@@ -262,10 +262,10 @@ namespace Urlaubsplanung
             string sCurrName = dataGridView1.CurrentRow.Cells["Name"].Value.ToString();
 
             string query = "SELECT MitarbeiterID FROM Mitarbeiter WHERE Name = @Name";
-            
+
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
-                cmd.Parameters.AddWithValue("Name", sCurrName);                
+                cmd.Parameters.AddWithValue("Name", sCurrName);
 
                 object result = cmd.ExecuteScalar();
 
@@ -309,9 +309,9 @@ namespace Urlaubsplanung
                                 return (datumBeginn, datumEnde);
                             }
                         }
-                    }                   
+                    }
                 }
-                
+
             }
             return null;
         }
@@ -344,7 +344,7 @@ namespace Urlaubsplanung
         // Übersicht Verwaltung je nach Antragsstatus einfärben beim Laden
         private void LoadExistingStatusColors()
         {
-            string query = "SELECT UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Urlaubsantrag";
+            string query = "SELECT Name, Mitarbeiter.MitarbeiterID, UrlaubsantragID, DatumBeginn, DatumEnde, Status FROM Mitarbeiter INNER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID";
 
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
@@ -355,6 +355,8 @@ namespace Urlaubsplanung
                     DateTime datumBeginn = reader.GetDateTime(reader.GetOrdinal("DatumBeginn"));
                     DateTime datumEnde = reader.GetDateTime(reader.GetOrdinal("DatumEnde"));
                     int status = reader.GetInt32(reader.GetOrdinal("Status"));
+                    int mitarbeiterID = reader.GetInt32(reader.GetOrdinal("MitarbeiterID"));
+                    string name = reader.GetString(reader.GetOrdinal("Name"));
 
                     // Kalenderwochen berechnen
                     int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
@@ -362,7 +364,7 @@ namespace Urlaubsplanung
 
                     // Farbe basierend auf Status
                     Color cellColor = Color.White;
-                    if (status == (int)EnumStatus.Status.Genehmigt) 
+                    if (status == (int)EnumStatus.Status.Genehmigt)
                     {
                         cellColor = Color.LightGreen;
                     }
@@ -378,21 +380,22 @@ namespace Urlaubsplanung
                     // Spalten und Zellen im DataGridView einfärben
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
-                        // Überprüfe, ob die Zeile eine gültige MitarbeiterID hat
-                        var mitarbeiterCell = row.Cells[mitarbeiterID];
-                if (mitarbeiterCell != null && mitarbeiterCell.Value != null && mitarbeiterCell.Value.ToString() == mitarbeiterID.ToString())
-                {
-                    // Spalten und Zellen im DataGridView einfärben, falls der MitarbeiterID entspricht
-                        for (int kw = kwBeginn; kw <= kwEnde; kw++)
+                        if (row.Cells["Name"].Value != null)
                         {
-                            string columnName = "KW" + kw;
-                            if (dataGridView1.Columns.Contains(columnName))
+                            if (row.Cells["Name"].Value.Equals(name))
                             {
-                                var cell = row.Cells[columnName];
-                                if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
+                                for (int kw = kwBeginn; kw <= kwEnde; kw++)
                                 {
-                                    cell.Style.BackColor = cellColor;
-                                    cell.Tag = (EnumStatus.Status)status;
+                                    string columnName = "KW" + kw;
+                                    if (dataGridView1.Columns.Contains(columnName))
+                                    {
+                                        var cell = row.Cells[columnName];
+                                        if (cell != null && cell.Value != null && cell.Value.ToString().Contains(datumBeginn.ToShortDateString()))
+                                        {
+                                            cell.Style.BackColor = cellColor;
+                                            cell.Tag = (EnumStatus.Status)status;
+                                        }
+                                    }
                                 }
                             }
                         }
