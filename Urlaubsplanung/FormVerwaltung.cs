@@ -378,6 +378,11 @@ namespace Urlaubsplanung
                     // Spalten und Zellen im DataGridView einfärben
                     foreach (DataGridViewRow row in dataGridView1.Rows)
                     {
+                        // Überprüfe, ob die Zeile eine gültige MitarbeiterID hat
+                        var mitarbeiterCell = row.Cells[mitarbeiterID];
+                if (mitarbeiterCell != null && mitarbeiterCell.Value != null && mitarbeiterCell.Value.ToString() == mitarbeiterID.ToString())
+                {
+                    // Spalten und Zellen im DataGridView einfärben, falls der MitarbeiterID entspricht
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
                             string columnName = "KW" + kw;
