@@ -74,6 +74,7 @@ namespace Urlaubsplanung
 
                     DataRow targetRow;
 
+                    // Mehr Zeilen als in der DB?
                     if (existingRows.Length > 0)
                     {
                         targetRow = existingRows[0];

@@ -52,36 +52,42 @@ namespace Urlaubsplanung
         private void button1_Click(object sender, EventArgs e)
         {
             if (textBox2.Text != string.Empty || textBox3.Text != string.Empty || textBox1.Text != string.Empty)
-            {
-                if (textBox2.Text == textBox3.Text)
+            {   if (textBox3.TextLength >= 8 || textBox4.TextLength >= 8)
                 {
-                    cmd = new SqlCommand("SELECT * FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "'", cn);
-                    dr = cmd.ExecuteReader();
-                    if (dr.Read())
+                    if (textBox2.Text == textBox3.Text)
                     {
-                        dr.Close();
-                        MessageBox.Show("Der Benutzername ist bereits vergeben. ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        cmd = new SqlCommand("SELECT * FROM Mitarbeiter WHERE Benutzername='" + textBox1.Text + "'", cn);
+                        dr = cmd.ExecuteReader();
+                        if (dr.Read())
+                        {
+                            dr.Close();
+                            MessageBox.Show("Der Benutzername ist bereits vergeben. ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
+                            dr.Close();
+                            int Anspruch = 200;
+                            int Fehlstunden = 0;
+
+                            cmd = new SqlCommand("INSERT INTO Mitarbeiter (Name, Urlaubsanspruch, Fehlstunden, Benutzername, Passwort, Rolle) VALUES (@Name, @Urlaubsanspruch, @Fehlstunden, @Benutzername, @Passwort, @Rolle)", cn);
+                            cmd.Parameters.AddWithValue("Name", textBox4.Text);
+                            cmd.Parameters.AddWithValue("Urlaubsanspruch", Anspruch);
+                            cmd.Parameters.AddWithValue("Fehlstunden", Fehlstunden);
+                            cmd.Parameters.AddWithValue("Benutzername", textBox1.Text);
+                            cmd.Parameters.AddWithValue("Passwort", textBox2.Text);
+                            cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue);
+                            cmd.ExecuteNonQuery();
+                            MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                     else
                     {
-                        dr.Close();
-                        int Anspruch = 200;
-                        int Fehlstunden = 0;
-                        
-                        cmd = new SqlCommand("INSERT INTO Mitarbeiter (Name, Urlaubsanspruch, Fehlstunden, Benutzername, Passwort, Rolle) VALUES (@Name, @Urlaubsanspruch, @Fehlstunden, @Benutzername, @Passwort, @Rolle)", cn);
-                        cmd.Parameters.AddWithValue("Name", textBox4.Text);
-                        cmd.Parameters.AddWithValue("Urlaubsanspruch", Anspruch);
-                        cmd.Parameters.AddWithValue("Fehlstunden", Fehlstunden);
-                        cmd.Parameters.AddWithValue("Benutzername", textBox1.Text);
-                        cmd.Parameters.AddWithValue("Passwort", textBox2.Text);
-                        cmd.Parameters.AddWithValue("Rolle", comboBox1.SelectedValue);
-                        cmd.ExecuteNonQuery();
-                        MessageBox.Show("Ihr Konto wurde erstellt. Bitte einloggen.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Die Passwörter müssen übereinstimmen.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Die Passwörter müssen übereinstimmen.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Das Passwort muss mindestens 8 Zeichen beinhalten.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
