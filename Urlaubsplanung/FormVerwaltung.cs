@@ -321,8 +321,7 @@ namespace Urlaubsplanung
 
         private int GetUrlaubsantragID(int mitarbeiterID, DateTime datumBeginn, DateTime datumEnde)
         {
-            string query = "SELECT UrlaubsantragID FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID AND DatumBeginn = @DatumBeginn AND DatumEnde = @DatumEnde";
-
+            string query = "SELECT UrlaubsantragID FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID AND DatumBeginn = @DatumBeginn AND DatumEnde = @DatumEnde";           
             using (SqlCommand cmd = new SqlCommand(query, cn))
             {
                 cmd.Parameters.Clear();

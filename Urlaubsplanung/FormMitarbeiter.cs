@@ -30,24 +30,24 @@ namespace Urlaubsplanung
         }
 
         private void FormMitarbeiter_Load(object sender, EventArgs e)
-        {          
-                string pw = "test";
+        {
+            string pw = "test";
 
-                System.Security.SecureString strsec = new System.Security.SecureString();
-                foreach (char c in pw.ToCharArray())
-                {
-                    strsec.AppendChar(c);
-                }
-                strsec.MakeReadOnly();
+            System.Security.SecureString strsec = new System.Security.SecureString();
+            foreach (char c in pw.ToCharArray())
+            {
+                strsec.AppendChar(c);
+            }
+            strsec.MakeReadOnly();
 
-                System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
+            System.Data.SqlClient.SqlCredential sqlCred = new System.Data.SqlClient.SqlCredential("urlaubdbuser", strsec);
 
-                System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
-                sqlCon.Open();
+            System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection("Persist Security Info=False;Data Source=PN-PRECISION;Initial Catalog=urlaubdb", sqlCred);
+            sqlCon.Open();
 
-                cn = sqlCon;
-                   
-           
+            cn = sqlCon;
+
+
             LoadBoldedDates();
             LoadUserLabel();
             LoadUrlaubsanspruchLabel();
@@ -60,25 +60,25 @@ namespace Urlaubsplanung
         {
             string query = "SELECT DatumBeginn, DatumEnde, Status FROM Urlaubsantrag WHERE MitarbeiterID = @MitarbeiterID";
 
-            
-                SqlCommand cmd = new SqlCommand(query, cn);
-                cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
-                SqlDataReader dr = cmd.ExecuteReader();
 
-                while (dr.Read())
-                {                    
-                    DateTime DatumBeginn = dr.GetDateTime(0);
-                    DateTime DatumEnde = dr.GetDateTime(1);
-                    EnumStatus.Status status = (EnumStatus.Status)dr.GetInt32(2);
+            SqlCommand cmd = new SqlCommand(query, cn);
+            cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+            SqlDataReader dr = cmd.ExecuteReader();
 
-                    if (status == EnumStatus.Status.Ausstehend || status == EnumStatus.Status.Genehmigt)
+            while (dr.Read())
+            {
+                DateTime DatumBeginn = dr.GetDateTime(0);
+                DateTime DatumEnde = dr.GetDateTime(1);
+                EnumStatus.Status status = (EnumStatus.Status)dr.GetInt32(2);
+
+                if (status == EnumStatus.Status.Ausstehend || status == EnumStatus.Status.Genehmigt)
+                {
+                    for (DateTime date = DatumBeginn; date <= DatumEnde; date = date.AddDays(1))
                     {
-                        for (DateTime date = DatumBeginn; date <= DatumEnde; date = date.AddDays(1))
-                        {
-                            monthCalendar1.AddBoldedDate(date);
-                        }
+                        monthCalendar1.AddBoldedDate(date);
                     }
                 }
+            }
 
             dr.Close();
             monthCalendar1.UpdateBoldedDates();
@@ -86,7 +86,7 @@ namespace Urlaubsplanung
 
         // Angemeldeten Mitarbeiter anzeigen
         private void LoadUserLabel()
-        { 
+        {
             string query = "SELECT Name FROM Mitarbeiter WHERE MitarbeiterID = @MitarbeiterID";
 
             SqlCommand cmd = new SqlCommand(query, cn);
@@ -135,8 +135,37 @@ namespace Urlaubsplanung
         // Resturlaub berechnen/anzeigen
         private void LoadResturlaubLabel()
         {
-            int Resturlaub = Urlaubsanspruch - Fehlstunden;
-            label8.Text = Resturlaub.ToString() + " h"; 
+            double Resturlaub = Urlaubsanspruch - Fehlstunden;
+
+            string query = "SELECT Urlaubsantrag.DatumBeginn, Urlaubsantrag.DatumEnde, Urlaubsantrag.Status FROM Urlaubsantrag WHERE Urlaubsantrag.MitarbeiterID = @MitarbeiterID AND Urlaubsantrag.Status = @StatusGenehmigt";
+
+            using (SqlCommand cmd = new SqlCommand(query, cn))
+            {
+                cmd.Parameters.AddWithValue("@MitarbeiterID", MitarbeiterID);
+                cmd.Parameters.AddWithValue("@StatusGenehmigt", (int)EnumStatus.Status.Genehmigt);
+
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        DateTime datumBeginn = dr.GetDateTime(0);
+                        DateTime datumEnde = dr.GetDateTime(1);
+
+                        for (DateTime date = datumBeginn; date <= datumEnde; date = date.AddDays(1))
+                        {
+                            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                                continue; 
+
+                            if (date.DayOfWeek == DayOfWeek.Friday)
+                                Resturlaub -= 5.50;
+                            else
+                                Resturlaub -= 8.25;
+                        }
+                    }
+                }
+            }
+
+            label8.Text = Resturlaub.ToString("0.##") + " h"; 
         }
 
         private void button1_Click(object sender, EventArgs e)
