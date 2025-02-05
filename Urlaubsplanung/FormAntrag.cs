@@ -108,6 +108,14 @@ namespace Urlaubsplanung
                         } 
                     else
                         {
+                        if (dateTimePicker1.Value.DayOfWeek == DayOfWeek.Saturday || dateTimePicker1.Value.DayOfWeek == DayOfWeek.Sunday ||
+                            dateTimePicker2.Value.DayOfWeek == DayOfWeek.Saturday || dateTimePicker2.Value.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            dr.Close();
+                            MessageBox.Show("Der Urlaub kann nicht an einem Wochenende beginnen bzw. enden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else
+                        {
                         int? nMitarbeiterID = dr.GetInt32(0);
 
                         dr.Close();
@@ -123,12 +131,12 @@ namespace Urlaubsplanung
                         cmd.ExecuteNonQuery();
 
                         MessageBox.Show("Ihr Antrag wurde eingereicht.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
                 }                
                 else
                 {
                     dr.Close();
-
                     MessageBox.Show("Mitarbeiter nicht gefunden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
