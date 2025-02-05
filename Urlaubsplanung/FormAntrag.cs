@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Data.SqlClient;
 using Urlaubsplanung.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Urlaubsplanung
 {
@@ -96,30 +97,39 @@ namespace Urlaubsplanung
             cmd.Parameters.AddWithValue("@Name", label6.Text);
 
             dr = cmd.ExecuteReader();
-                    
-            if (dr.Read())
+
+                if (dr.Read())
                 {
-                    int? nMitarbeiterID = dr.GetInt32(0);
+                    if (dateTimePicker2.Value < dateTimePicker1.Value) 
+                        {
+                        dr.Close();
+                        MessageBox.Show("Das Datum Ende kann nicht vor Datum Beginn liegen.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                        } 
+                    else
+                        {
+                        int? nMitarbeiterID = dr.GetInt32(0);
 
-                    dr.Close();
+                        dr.Close();
 
-                    cmd = new SqlCommand(
-                        "INSERT INTO Urlaubsantrag (MitarbeiterID, DatumBeginn, DatumEnde, Grund, Status) VALUES (@ID, @DatumBeginn, @DatumEnde, @Grund, @Status)", cn);
+                        cmd = new SqlCommand(
+                            "INSERT INTO Urlaubsantrag (MitarbeiterID, DatumBeginn, DatumEnde, Grund, Status) VALUES (@ID, @DatumBeginn, @DatumEnde, @Grund, @Status)", cn);
 
-                    cmd.Parameters.AddWithValue("@ID", nMitarbeiterID);
-                    cmd.Parameters.AddWithValue("@DatumBeginn", dateTimePicker1.Value);
-                    cmd.Parameters.AddWithValue("@DatumEnde", dateTimePicker2.Value);
-                    cmd.Parameters.AddWithValue("@Grund", textBox1.Text);
-                    cmd.Parameters.AddWithValue("@Status", 0);
-                    cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue("@ID", nMitarbeiterID);
+                        cmd.Parameters.AddWithValue("@DatumBeginn", dateTimePicker1.Value);
+                        cmd.Parameters.AddWithValue("@DatumEnde", dateTimePicker2.Value);
+                        cmd.Parameters.AddWithValue("@Grund", textBox1.Text);
+                        cmd.Parameters.AddWithValue("@Status", 0);
+                        cmd.ExecuteNonQuery();
 
-                    MessageBox.Show("Ihr Antrag wurde eingereicht.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                        MessageBox.Show("Ihr Antrag wurde eingereicht.", "Meldung", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }                
                 else
                 {
                     dr.Close();
 
-                    MessageBox.Show("Mitarbeiter nicht gefunden.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Mitarbeiter nicht gefunden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
