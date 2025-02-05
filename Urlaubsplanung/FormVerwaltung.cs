@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Urlaubsplanung.Enums;
@@ -71,10 +72,8 @@ namespace Urlaubsplanung
                 foreach (DataRow row in myData.Tables["Mitarbeiter"].Rows)
                 {
                     DataRow[] existingRows = übersichtTable.Select("Name = '" + row["Name"].ToString() + "'");
-
                     DataRow targetRow;
 
-                    // Mehr Zeilen als in der DB?
                     if (existingRows.Length > 0)
                     {
                         targetRow = existingRows[0];
@@ -85,13 +84,13 @@ namespace Urlaubsplanung
                         targetRow["Name"] = row["Name"];
                         targetRow["Urlaubsanspruch"] = row["Urlaubsanspruch"];
                         targetRow["Fehlstunden"] = row["Fehlstunden"];
-
                         übersichtTable.Rows.Add(targetRow);
                     }
 
-                    // Urlaubsdaten füllen (KWs)
                     var urlaubRows = myData.Tables["Mitarbeiter"].AsEnumerable()
                         .Where(urlaubRow => urlaubRow["Name"].ToString() == row["Name"].ToString());
+
+                    Dictionary<int, List<string>> kwUrlaubsdaten = new Dictionary<int, List<string>>();
 
                     foreach (var urlaubRow in urlaubRows)
                     {
@@ -106,7 +105,37 @@ namespace Urlaubsplanung
 
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
-                            targetRow["KW" + kw] = datumBeginn.ToShortDateString() + " - " + datumEnde.ToShortDateString();
+                            if (!kwUrlaubsdaten.ContainsKey(kw))
+                            {
+                                kwUrlaubsdaten[kw] = new List<string>();
+                            }
+                            kwUrlaubsdaten[kw].Add(datumBeginn.ToShortDateString() + " - " + datumEnde.ToShortDateString());
+                        }
+                    }
+
+                    foreach (var entry in kwUrlaubsdaten)
+                    {
+                        int kw = entry.Key;
+                        DataRow[] existingKwRows = übersichtTable.Select("Name = '" + row["Name"].ToString() + "' AND [KW" + kw + "] IS NOT NULL");
+
+                        if (existingKwRows.Length == 0)
+                        {
+                            targetRow["KW" + kw] = entry.Value[0];
+                        }
+                        else
+                        {
+                            targetRow["KW" + kw] = entry.Value[0];
+
+                            for (int i = 1; i < entry.Value.Count; i++)
+                            {
+                                if (!übersichtTable.AsEnumerable().Any(r => r["Name"].ToString() == row["Name"].ToString() && r["KW" + kw].ToString() == entry.Value[i]))
+                                {
+                                    DataRow newRow = übersichtTable.NewRow();
+                                    newRow["Name"] = row["Name"];
+                                    newRow["KW" + kw] = entry.Value[i];
+                                    übersichtTable.Rows.Add(newRow);
+                                }
+                            }
                         }
                     }
                 }
