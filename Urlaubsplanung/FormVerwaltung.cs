@@ -103,6 +103,7 @@ namespace Urlaubsplanung
                         int kwBeginn = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumBeginn, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
                         int kwEnde = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(datumEnde, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
 
+                        // Urlaubsdaten in Dictionary speichern
                         for (int kw = kwBeginn; kw <= kwEnde; kw++)
                         {
                             if (!kwUrlaubsdaten.ContainsKey(kw))
@@ -113,6 +114,7 @@ namespace Urlaubsplanung
                         }
                     }
 
+                    // DataTable aktualisieren
                     foreach (var entry in kwUrlaubsdaten)
                     {
                         int kw = entry.Key;
@@ -435,6 +437,20 @@ namespace Urlaubsplanung
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
         {
 
         }

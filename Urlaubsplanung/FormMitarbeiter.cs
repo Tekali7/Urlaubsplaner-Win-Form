@@ -168,6 +168,14 @@ namespace Urlaubsplanung
             label8.Text = Resturlaub.ToString("0.##") + " h"; 
         }
 
+        private void LoadGenehmigteUrlTab()
+        {
+            // MitarbeiterID finden für eingeloggten Mitarbeiter
+            // Urlaubsanträge vom Mitarbeiter finden mit Status
+            // Falls Status "Genehmigt", in Tabelle eintragen
+            // Tabelle: Grund | Datum von bis
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             this.Hide();
