@@ -443,16 +443,29 @@ namespace Urlaubsplanung
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
+            if (checkBox1.Checked)
+            {
+                checkBox2.Checked = false;
+                checkBox3.Checked = false;
+            }
         }
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
-
+            if (checkBox2.Checked)
+            {
+                checkBox1.Checked = false;
+                checkBox3.Checked = false;
+            }
         }
 
         private void checkBox3_CheckedChanged(object sender, EventArgs e)
         {
-
+            if (checkBox3.Checked)
+            {
+                checkBox1.Checked = false;
+                checkBox2.Checked = false;
+            }
         }
     }
 }
