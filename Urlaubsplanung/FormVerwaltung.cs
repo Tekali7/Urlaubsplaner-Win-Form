@@ -9,6 +9,8 @@ using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -441,6 +443,10 @@ namespace Urlaubsplanung
 
         }
 
+        // Mitarbeiter/Status mittels Checkboxen filtern
+        // CheckBox1 = Nur Genehmigte Urlaubsanträge anzeigen, CheckBox2 = Nur Abgelehnte, CheckBox3 = Nur Ausstehende
+        // Bei Abwahl aller CheckBoxen FormVerwaltung ungefiltert anzeigen (alle 3 Status zusammen)
+
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
             if (checkBox1.Checked)
@@ -448,6 +454,7 @@ namespace Urlaubsplanung
                 checkBox2.Checked = false;
                 checkBox3.Checked = false;
             }
+            FilterData();
         }
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
@@ -457,6 +464,7 @@ namespace Urlaubsplanung
                 checkBox1.Checked = false;
                 checkBox3.Checked = false;
             }
+            FilterData();
         }
 
         private void checkBox3_CheckedChanged(object sender, EventArgs e)
@@ -466,6 +474,38 @@ namespace Urlaubsplanung
                 checkBox1.Checked = false;
                 checkBox2.Checked = false;
             }
+            FilterData();
+        }
+
+        private void FilterData()
+        {
+            string statusFilter = "";
+
+            if (checkBox1.Checked)
+            {
+                statusFilter = "WHERE Status = 1";
+            }
+            else if (checkBox2.Checked)
+            {
+                statusFilter = "WHERE Status = 2";
+            }
+            else if (checkBox3.Checked)
+            {
+                statusFilter = "WHERE Status = 0";
+            }
+            else
+            {
+                statusFilter = "";
+            }
+
+            string query = $@"SELECT Name, Urlaubsanspruch, Fehlstunden, DatumBeginn, DatumEnde, Status FROM Mitarbeiter INNER JOIN Urlaubsantrag ON Mitarbeiter.MitarbeiterID = Urlaubsantrag.MitarbeiterID {statusFilter}";
+
+            SqlDataAdapter adapter = new SqlDataAdapter(query, cn);
+            DataTable dt = new DataTable();
+            adapter.Fill(dt);
+
+            dataGridView1.DataSource = dt;
+
         }
     }
 }
