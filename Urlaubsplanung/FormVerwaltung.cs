@@ -443,9 +443,10 @@ namespace Urlaubsplanung
 
         }
 
-        // Mitarbeiter/Status mittels Checkboxen filtern
-        // CheckBox1 = Nur Genehmigte Urlaubsanträge anzeigen, CheckBox2 = Nur Abgelehnte, CheckBox3 = Nur Ausstehende
-        // Bei Abwahl aller CheckBoxen FormVerwaltung ungefiltert anzeigen (alle 3 Status zusammen)
+        // Mitarbeiter/Status mittels Checkboxen filtern X
+        // CheckBox1 = Nur Genehmigte Urlaubsanträge anzeigen, CheckBox2 = Nur Abgelehnte, CheckBox3 = Nur Ausstehende X
+        // Bei Abwahl aller CheckBoxen FormVerwaltung ungefiltert anzeigen (alle 3 Status zusammen) X
+        // Gefiltertes Anzeigen wie Standard FormVerwaltung(KW-Spalten, Hintergrundfarbe)
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
