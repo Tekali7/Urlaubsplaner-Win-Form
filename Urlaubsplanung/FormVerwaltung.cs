@@ -506,6 +506,6 @@ namespace Urlaubsplanung
 
             dataGridView1.DataSource = dt;
 
-        }
+        }   
     }
 }
